@@ -12,10 +12,9 @@ public class Location_Model {
 
     }
 
-    public Location_Model(String name_location, String year, Bones_Model bone, int elevation){
+    public Location_Model(String name_location, String year, int elevation){
         location_name = name_location;
         yr = year;
-        bones.add(bone);
         elevtion = elevation;
     }
 
@@ -31,7 +30,7 @@ public class Location_Model {
         return elevtion;
     }
 
-    public String getYr() {
+    public String getYear() {
         return yr;
     }
 

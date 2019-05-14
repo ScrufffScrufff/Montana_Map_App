@@ -50,7 +50,7 @@ class ImagePanel extends JPanel {
 
             x = (wi - (scale * imageWidth))/2;
             y = (he - (scale * imageHeight))/2;
-0        }
+        }
         AffineTransform at = AffineTransform.getTranslateInstance(x,y);
         at.scale(scale, scale);
         g2.drawRenderedImage(image, at);

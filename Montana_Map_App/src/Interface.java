@@ -11,8 +11,7 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Path2D;
 import java.awt.geom.PathIterator;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,12 +39,43 @@ public class Interface extends JFrame {
 
     public Interface() {
         super();
+        Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+
+            public void run() {
+                try {  //running indefinetly now
+
+                    // write object to file
+                    FileOutputStream fos = new FileOutputStream("mapdata.ser");
+                    ObjectOutputStream oos = new ObjectOutputStream(fos);
+                    oos.writeObject(lst);
+                    oos.close();
+
+                    // read object from file
+                    FileInputStream fis = new FileInputStream("mapdata.ser");
+                    ObjectInputStream ois = new ObjectInputStream(fis);
+                    JList_Struct result = (JList_Struct) ois.readObject();
+                    ois.close();
+                    System.out.println(result.getRlist().toString());
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (ClassNotFoundException e){
+                    e.printStackTrace();
+                }
+                System.exit(0);
+            }
+        }));
 
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setTitle("Montana Map");
         this.setExtendedState(JFrame.MAXIMIZED_BOTH);
         run();
         setVisible(true);
+    }
+
+    public void Shut_Down(){
+
     }
 
 
@@ -56,7 +86,7 @@ public class Interface extends JFrame {
         lst_jp = new DefaultListModel<>();
         DefaultListModel<Location_Model> lst_n = new DefaultListModel<>();
         lst = new JList_Struct(lst_n);
-        panel = new ImagePanel( "C:\\Users\\Xain\\Pictures\\Montanaappmap\\Montana_Topo_Map.png");
+        panel = new ImagePanel( "C:\\Users\\Xain\\Pictures\\Montanaappmap\\Montana_Topo_Map.jpg");
         panel.setLayout(null);
         lstactvfrm = 0;
         scrollPane = new JScrollPane(panel);
@@ -129,9 +159,10 @@ public class Interface extends JFrame {
         lst.getJlst().setVisible(true);
     } // run()
 
-    public boolean Add_Entry(String s) {
-        if (s != null) {
-            lst.getRlist().addElement(s);
+    public boolean Add_Entry(Location_Model loc) {
+        if (loc.getLocation_name() != null && loc.getElevtion() != 0 && loc.getYear() != null ) {
+            lst.getRlist().addElement(loc.getLocation_name());
+
             return true;
         } else {
             return false;
@@ -143,12 +174,33 @@ public class Interface extends JFrame {
         } else {
             int index = lst.getJlst().getSelectedIndex();
             lst.getRlist().remove(index);
+
         }
     }
 
-    public String getInputFromUser() {
-        String str = JOptionPane.showInputDialog("Enter location name");
-        return str;
+    public Location_Model getInputFromUser() {
+        JTextField loc_name = new JTextField(5);
+        JTextField year = new JTextField(5);
+        JTextField elevation = new JTextField(5);
+
+        JPanel myPanel = new JPanel();
+        myPanel.add(new JLabel("Location Name:"));
+        myPanel.add(loc_name);
+        myPanel.add(Box.createHorizontalStrut(10)); // a spacer
+        myPanel.add(new JLabel("Year Found/Entered:"));
+        myPanel.add(year);
+        myPanel.add(Box.createHorizontalStrut(10)); // a spacer
+        myPanel.add(new JLabel("Elevation of area:"));
+        myPanel.add(elevation);
+
+        int result = JOptionPane.showConfirmDialog(null, myPanel,
+                "Please Enter Location name, Year found/current year, Elevation of the area", JOptionPane.OK_CANCEL_OPTION);
+        if (result == JOptionPane.OK_OPTION) {
+            Location_Model location = new Location_Model(loc_name.getText(),year.getText()
+                    ,Integer.parseInt(elevation.getText()));
+            return location;
+        }
+        return new Location_Model();
     }
 
     public JPanel Draw_Line() {

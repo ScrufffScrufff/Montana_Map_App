@@ -1,9 +1,10 @@
 import javax.swing.*;
+import java.io.Serializable;
 
 
-public class JList_Struct {
+public class JList_Struct implements Serializable {
     private JList<Location_Model> lst;
-    private DefaultListModel rlist;
+    private DefaultListModel<Location_Model> rlist;
     final private JScrollPane lstscroller;
 
     public JList_Struct(DefaultListModel<Location_Model> list) {
