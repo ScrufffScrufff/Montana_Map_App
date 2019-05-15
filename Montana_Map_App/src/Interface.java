@@ -86,7 +86,7 @@ public class Interface extends JFrame {
         lst_jp = new DefaultListModel<>();
         DefaultListModel<Location_Model> lst_n = new DefaultListModel<>();
         lst = new JList_Struct(lst_n);
-        panel = new ImagePanel( "C:\\Users\\Xain\\Pictures\\Montanaappmap\\Montana_Topo_Map.jpg");
+        panel = new ImagePanel( "C:\\Users\\Xain\\Pictures\\Montanaappmap\\Montana_Topo_Map.png");
         panel.setLayout(null);
         lstactvfrm = 0;
         scrollPane = new JScrollPane(panel);
