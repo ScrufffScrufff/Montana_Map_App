@@ -1,7 +1,11 @@
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.util.ArrayList;
 
-public class Location_Model {
-
+public class Location_Model implements Serializable {
+    public static final long serialVersionUID = 1L;
     String location_name;
     String yr;
     ArrayList<Bones_Model> bones = new ArrayList();
@@ -16,6 +20,22 @@ public class Location_Model {
         location_name = name_location;
         yr = year;
         elevtion = elevation;
+    }
+
+    private void writeObject(ObjectOutputStream out) throws IOException {
+        out.defaultWriteObject();
+        out.writeObject(this.location_name);
+        out.writeObject(this.yr);
+        out.writeObject(this.bones);
+        out.writeObject(elevtion);
+    }
+
+    private void readObject(ObjectInputStream in) throws IOException,ClassNotFoundException {
+        in.defaultReadObject();
+        this.location_name = (String) in.readObject();
+        this.yr = (String) in.readObject();
+        this.bones = (ArrayList<Bones_Model>) in.readObject();
+        this.elevtion = (int) in.readObject();
     }
 
     public String getLocation_name() {

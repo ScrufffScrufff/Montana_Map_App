@@ -42,28 +42,21 @@ public class Interface extends JFrame {
         Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
 
             public void run() {
-                try {  //running indefinetly now
-
-                    // write object to file
-                    FileOutputStream fos = new FileOutputStream("mapdata.ser");
-                    ObjectOutputStream oos = new ObjectOutputStream(fos);
-                    oos.writeObject(lst);
-                    oos.close();
-
-                    // read object from file
-                    FileInputStream fis = new FileInputStream("mapdata.ser");
-                    ObjectInputStream ois = new ObjectInputStream(fis);
-                    JList_Struct result = (JList_Struct) ois.readObject();
-                    ois.close();
-                    System.out.println(result.getRlist().toString());
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                } catch (ClassNotFoundException e){
-                    e.printStackTrace();
+                if(lst != null) {
+                    File f = new File("mapdata.ser");
+                    try {
+                        // write object to file
+                        ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(f));
+                        oos.writeObject(lst);
+                        oos.flush();
+                        oos.close();
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
-                System.exit(0);
+                Runtime.getRuntime().halt(0);
             }
         }));
 
@@ -74,18 +67,33 @@ public class Interface extends JFrame {
         setVisible(true);
     }
 
-    public void Shut_Down(){
-
-    }
-
 
     public void run() {
+        File savefile = new File("mapdata.ser");
+        if(savefile.exists()){
+            try{
+                ObjectInputStream ois = new ObjectInputStream(new FileInputStream(savefile));
+                lst = (JList_Struct)ois.readObject();
+                ois.close();
+            } catch (FileNotFoundException e){
+                e.printStackTrace();
+            }
+            catch (IOException e){
+                e.printStackTrace();
+            }
+            catch (ClassNotFoundException e){
+                e.printStackTrace();
+            }
+        } else {
+            DefaultListModel<Location_Model> lst_n = new DefaultListModel<>();
+            lst = new JList_Struct(lst_n);
+        }
+
         JPanel buttonPanel = new JPanel();
         buttonPanel.setLayout(new BorderLayout());
         JLayeredPane lp = getLayeredPane();
         lst_jp = new DefaultListModel<>();
-        DefaultListModel<Location_Model> lst_n = new DefaultListModel<>();
-        lst = new JList_Struct(lst_n);
+
         panel = new ImagePanel( "C:\\Users\\Xain\\Pictures\\Montanaappmap\\Montana_Topo_Map.png");
         panel.setLayout(null);
         lstactvfrm = 0;
