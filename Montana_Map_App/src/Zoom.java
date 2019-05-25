@@ -10,20 +10,20 @@ import javax.swing.event.*;
 
 
 class ImagePanel extends JPanel {
-    BufferedImage image;
-    double scale;
-    boolean map; //to tell the paintcomponent what comp it is painting
+    private BufferedImage image;
+    private double scale;
+    private boolean ismap; //to tell the paintcomponent what comp it is painting
 
     public ImagePanel(String s)
     {
-        map = true;
+        ismap = true;
         loadImage(s);
         scale = 1.0;
         setBackground(Color.black);
     }
 
     public ImagePanel(BufferedImage b, double scle){
-        map = false;
+        ismap = false;
         image = b;
         scale = scle;
         setOpaque(false);
@@ -41,7 +41,7 @@ class ImagePanel extends JPanel {
         int imageHeight = image.getHeight();
 
 
-        if(map){
+        if(ismap){
             x = (w - (scale * imageWidth))/2;
             y = (h - (scale * imageHeight))/2;
         }else {

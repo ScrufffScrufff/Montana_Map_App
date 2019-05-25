@@ -70,8 +70,14 @@ public class Interface extends JFrame {
 
     public void run() {
         File savefile = new File("mapdata.ser");
+        panel = new ImagePanel( "C:\\Users\\Xain\\Pictures\\Montanaappmap\\Montana_Topo_Map.png");
+        panel.setLayout(null);
+        lstactvfrm = 0;
+        scrollPane = new JScrollPane(panel);
+        zoom = new ImageZoom(panel, this);
+        this.add(BorderLayout.CENTER, scrollPane);
         if(savefile.exists()){
-            try{
+            try{ //load the panel first idiot.
                 ObjectInputStream ois = new ObjectInputStream(new FileInputStream(savefile));
                 lst = (JList_Struct)ois.readObject();
                 ois.close();
@@ -94,14 +100,10 @@ public class Interface extends JFrame {
         JLayeredPane lp = getLayeredPane();
         lst_jp = new DefaultListModel<>();
 
-        panel = new ImagePanel( "C:\\Users\\Xain\\Pictures\\Montanaappmap\\Montana_Topo_Map.png");
-        panel.setLayout(null);
-        lstactvfrm = 0;
-        scrollPane = new JScrollPane(panel);
-        zoom = new ImageZoom(panel, this);
 
 
-        this.add(BorderLayout.CENTER, scrollPane);
+
+
         final JButton remove_entry_button = new JButton("Remove the selected map location");
         final JButton add_entry_button = new JButton("Add new map location");
         buttonPanel.add(BorderLayout.NORTH,remove_entry_button);
@@ -157,20 +159,25 @@ public class Interface extends JFrame {
             }
         });
 
-        lst.getJlst().addListSelectionListener(new ListSelectionListener() {
+        lst.getJlist().addListSelectionListener(new ListSelectionListener() {
             @Override
             public void valueChanged(ListSelectionEvent e) {
             }
         });
 
 
-        lst.getJlst().setVisible(true);
+        lst.getJlist().setVisible(true);
+        for (int i = 0; i < lst.getRlist().size(); i++){
+            placeImage(lst.getRlist().getElementAt(i).getFile_path());
+            fileNumber = (lst.getRlist().getElementAt(i).getFilenumber() > fileNumber) ?
+                    lst.getRlist().getElementAt(i).getFilenumber() + 1 : fileNumber + 1; // increase to 1 + highest file found
+        }
     } // run()
 
     public boolean Add_Entry(Location_Model loc) {
         if (loc.getLocation_name() != null && loc.getElevtion() != 0 && loc.getYear() != null ) {
-            lst.getRlist().addElement(loc.getLocation_name());
-
+            lst.getStrlist().addElement(loc.getLocation_name());
+            lst.getRlist().addElement(loc);
             return true;
         } else {
             return false;
@@ -178,11 +185,16 @@ public class Interface extends JFrame {
     }
 
     public void Remove_Entry() {
-        if (lst.getRlist().isEmpty() || lst.getJlst().getSelectedIndex() == -1) {
-        } else {
-            int index = lst.getJlst().getSelectedIndex();
+        if (lst.getStrlist().isEmpty() || lst.getJlist().getSelectedIndex() == -1) {
+        } else { //not deleting correct things at time, wrong filepath to delete or somthing
+            int index = lst.getJlist().getSelectedIndex();
+            File to_delete = new File(lst.getRlist().get(index).file_path);
+            to_delete.delete();
+            lst.getStrlist().remove(index);
             lst.getRlist().remove(index);
-
+            panel.remove(imagePanelList.get(index));
+            imagePanelList.remove(index);
+            repaint();
         }
     }
 
@@ -204,6 +216,11 @@ public class Interface extends JFrame {
         int result = JOptionPane.showConfirmDialog(null, myPanel,
                 "Please Enter Location name, Year found/current year, Elevation of the area", JOptionPane.OK_CANCEL_OPTION);
         if (result == JOptionPane.OK_OPTION) {
+            try{
+                Integer.parseInt(elevation.getText());
+            }catch (NumberFormatException e) {
+                return new Location_Model();
+            }
             Location_Model location = new Location_Model(loc_name.getText(),year.getText()
                     ,Integer.parseInt(elevation.getText()));
             return location;
@@ -287,9 +304,10 @@ public class Interface extends JFrame {
     private void placeImage(){
         String filename = "SAVE" + fileNumber + ".png";
         ImageIcon imageIcon = new ImageIcon(filename);
+        lst.getRlist().getElementAt(lst.getRlist().getSize()-1).setFilenumber(fileNumber);
         fileNumber++;
         Image tmpImage = imageIcon.getImage();
-
+        lst.getRlist().getElementAt(lst.getRlist().getSize()-1).setFile_path(filename);
         BufferedImage image = new BufferedImage(imageIcon.getIconWidth(), imageIcon.getIconHeight(), BufferedImage.TYPE_INT_ARGB);
         image.getGraphics().drawImage(tmpImage, 0, 0, null);
         tmpImage.flush();
@@ -303,8 +321,24 @@ public class Interface extends JFrame {
                 panel.getHeight());
 
 
-
     }
+    private void placeImage(String filename){ //change the filenumber here to somthing?
+        ImageIcon imageIcon = new ImageIcon(filename);
+        Image tmpImage = imageIcon.getImage();
+        BufferedImage image = new BufferedImage(imageIcon.getIconWidth(), imageIcon.getIconHeight(), BufferedImage.TYPE_INT_ARGB);
+        image.getGraphics().drawImage(tmpImage, 0, 0, null);
+        tmpImage.flush();
+
+        ImagePanel imagePanel = new ImagePanel(image, panel.getScale());
+        imagePanelList.add(imagePanel);
+        panel.add(imagePanel);
+        imagePanel.setBounds(
+                0,0,
+                panel.getWidth(),
+                panel.getHeight());
+        imagePanel.setVisible(true);
+    }
+
     public void updateImagePanelListscale(double scale){
         imagePanelList.forEach(imagePanel -> imagePanel.changeScale(scale));
     }

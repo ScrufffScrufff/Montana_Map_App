@@ -6,10 +6,11 @@ import java.util.ArrayList;
 
 public class Location_Model implements Serializable {
     public static final long serialVersionUID = 1L;
+    String file_path;
     String location_name;
     String yr;
     ArrayList<Bones_Model> bones = new ArrayList();
-    int elevtion;
+    int elevtion,filenumber;
 
 
     public Location_Model(){
@@ -27,7 +28,9 @@ public class Location_Model implements Serializable {
         out.writeObject(this.location_name);
         out.writeObject(this.yr);
         out.writeObject(this.bones);
-        out.writeObject(elevtion);
+        out.writeObject(this.elevtion);
+        out.writeObject(this.file_path);
+        out.writeObject(this.filenumber);
     }
 
     private void readObject(ObjectInputStream in) throws IOException,ClassNotFoundException {
@@ -36,6 +39,8 @@ public class Location_Model implements Serializable {
         this.yr = (String) in.readObject();
         this.bones = (ArrayList<Bones_Model>) in.readObject();
         this.elevtion = (int) in.readObject();
+        this.file_path = (String) in.readObject();
+        this.filenumber = (int) in.readObject();
     }
 
     public String getLocation_name() {
@@ -54,6 +59,10 @@ public class Location_Model implements Serializable {
         return yr;
     }
 
+    public String getFile_path() {
+        return file_path;
+    }
+
     public void addBone(Bones_Model bone) {
         this.bones.add(bone);
     }
@@ -67,5 +76,17 @@ public class Location_Model implements Serializable {
 
     public void setLocation_name(String location_name) {
         this.location_name = location_name;
+    }
+
+    public void setFile_path(String file_path) {
+        this.file_path = file_path;
+    }
+
+    public int getFilenumber() {
+        return filenumber;
+    }
+
+    public void setFilenumber(int filenumber) {
+        this.filenumber = filenumber;
     }
 }

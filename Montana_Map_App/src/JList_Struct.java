@@ -7,13 +7,20 @@ import java.io.Serializable;
 
 public class JList_Struct implements Serializable {
     public static final long serialVersionUID = 1L;
-    private transient JList<Location_Model> lst;
+    private transient JList<String> lst;
+    private transient DefaultListModel<String> str_list;
     private transient DefaultListModel<Location_Model> rlist;
     private transient JScrollPane lstscroller;
 
     public JList_Struct(DefaultListModel<Location_Model> list) {
-        lst = new JList<>(list);
+        //make r list not == list, but add every item's string location to r list instead
+        str_list = new DefaultListModel<>();
+        for (int i = 0; i < list.size(); i++){
+            str_list.addElement(list.getElementAt(i).getLocation_name());
+        }
+        lst = new JList<>(str_list);
         rlist = list;
+
         //size the array and populate it based on saved information
         lst.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         lst.setLayoutOrientation(JList.VERTICAL);
@@ -25,16 +32,16 @@ public class JList_Struct implements Serializable {
 
     private void writeObject(ObjectOutputStream out) throws IOException {
         out.defaultWriteObject();
-        //out.writeObject(this.lst);
+        out.writeObject(this.str_list);
         out.writeObject(this.rlist);
         //out.writeObject(this.lstscroller);
     }
 
     private void readObject(ObjectInputStream in) throws IOException,ClassNotFoundException {
         in.defaultReadObject();
-        //this.lst = (JList<Location_Model>) in.readObject();
+        this.str_list = (DefaultListModel<String>) in.readObject();
         this.rlist = (DefaultListModel<Location_Model>) in.readObject();
-        lst = new JList<>(rlist);
+        lst = new JList<>(str_list);
         lst.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         lst.setLayoutOrientation(JList.VERTICAL);
         lst.setVisibleRowCount(10);
@@ -44,13 +51,15 @@ public class JList_Struct implements Serializable {
         //this.lstscroller = (JScrollPane) in.readObject();
     }
 
-    public JList<Location_Model> getJlst() {
+    public JList<String> getJlist() {
         return lst;
     }
 
-    public DefaultListModel getRlist() {
+    public DefaultListModel<Location_Model> getRlist() {
         return rlist;
     }
+
+    public DefaultListModel<String> getStrlist(){return str_list;}
 
     public JScrollPane getListScroller() {
         return lstscroller;
