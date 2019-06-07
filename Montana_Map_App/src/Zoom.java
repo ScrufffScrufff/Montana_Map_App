@@ -146,9 +146,11 @@ class ImageZoom
                 if (!(previousScale == scale)) {
                     if (previousScale > scale || (previousScale == 0 && scale < 1.00)) {
                         anInterface.updateImagePanelListscale(-0.05);  //zoom out
+                        anInterface.updateObjectPanelListscale(-0.05);
                         imagePanel.changeScale(-0.05);
                     } else {
                         anInterface.updateImagePanelListscale(0.05);  //zoom in
+                        anInterface.updateObjectPanelListscale(0.05);
                         imagePanel.changeScale(0.05);
                     }
 
