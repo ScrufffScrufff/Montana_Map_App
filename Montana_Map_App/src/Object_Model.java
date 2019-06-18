@@ -6,15 +6,16 @@ import java.io.Serializable;
 
 public class Object_Model implements Serializable {
     private String name, type, filename, textfilepath;
-    private int year,objectnumber;
+    private int year,objectnumber,objecttextnumber;
     private int elevation;
-    private ImagePanel spot, textspot;
+    private ImagePanel objectpanel, objecttextpanel;
     private Point objectloc;
-    public Object_Model(String name, int year, int elevation, ImagePanel spot){
+
+    public Object_Model(String name, int year, int elevation, ImagePanel objectpanel){
         this.name = name;
         this.year = year;
         this.elevation = elevation;
-        this.spot = spot;
+        this.objectpanel = objectpanel;
         this.type = "-";
     }
     public Object_Model(String name, int year, int elevation){
@@ -33,34 +34,38 @@ public class Object_Model implements Serializable {
         name = null;
         year = 0;
         elevation = 0;
-        spot = null;
+        objectpanel = null;
         type = null;
     }
 
     private void writeObject(ObjectOutputStream out) throws IOException {
-        //out.defaultWriteObject();
         out.writeObject(this.name);
         out.writeObject(this.type);
+        out.writeObject(this.filename);
+        out.writeObject(this.textfilepath);
         out.writeObject(this.year);
         out.writeObject(this.objectnumber);
+        out.writeObject(this.objecttextnumber);
         out.writeObject(this.elevation);
         out.writeObject(this.filename);
         out.writeObject(this.objectloc);
     }
 
     private void readObject(ObjectInputStream in) throws IOException,ClassNotFoundException {
-        //in.defaultReadObject();
         this.name = (String) in.readObject();
         this.type = (String) in.readObject();
+        this.filename = (String) in.readObject();
+        this.textfilepath = (String) in.readObject();
         this.year = (int) in.readObject();
         this.objectnumber = (int) in.readObject();
+        this.objecttextnumber = (int) in.readObject();
         this.elevation = (int) in.readObject();
         this.filename = (String) in.readObject();
         this.objectloc = (Point) in.readObject();
     }
 
-    public ImagePanel getSpot() {
-        return spot;
+    public ImagePanel getObjectpanel() {
+        return objectpanel;
     }
 
     public int getElevation() {
@@ -87,8 +92,8 @@ public class Object_Model implements Serializable {
         this.name = name;
     }
 
-    public void setSpot(ImagePanel spot) {
-        this.spot = spot;
+    public void setObjectpanel(ImagePanel spot) {
+        this.objectpanel = spot;
     }
 
     public void setYear(int year) {
@@ -111,7 +116,7 @@ public class Object_Model implements Serializable {
         return filename;
     }
 
-    public void setFile_path(String filename) {
+    public void setFilePath(String filename) {
         this.filename = filename;
     }
 
@@ -132,10 +137,18 @@ public class Object_Model implements Serializable {
     }
 
     public ImagePanel gettextSpot() {
-        return textspot;
+        return objecttextpanel;
     }
 
-    public void settextSpot(ImagePanel textspot) {
-        this.textspot = textspot;
+    public void settextPanel(ImagePanel textspot) {
+        this.objecttextpanel = textspot;
+    }
+
+    public int getObjecttextnumber() {
+        return objecttextnumber;
+    }
+
+    public void setObjecttextnumber(int objecttextnumber) {
+        this.objecttextnumber = objecttextnumber;
     }
 }

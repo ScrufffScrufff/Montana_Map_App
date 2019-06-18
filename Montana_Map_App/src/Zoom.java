@@ -107,30 +107,30 @@ class ImagePanel extends JPanel {
 
 class ImageZoom
 {
-    ImagePanel imagePanel;
+    ImagePanel imagepanel;
     SpinnerNumberModel model =  new SpinnerNumberModel(1.0, 0.45, 10, .05);
-    Interface anInterface;
-    float previousScale;
+    Interface aninterface;
+    float previousscale;
     float scale;
     final JSpinner spinner = new JSpinner(model);
     ChangeListener spinnerlistener;
 
     public ImageZoom(ImagePanel ip, Interface inter)
     {
-        imagePanel = ip;
-        anInterface = inter;
-        previousScale = 0;
+        imagepanel = ip;
+        aninterface = inter;
+        previousscale = 0;
         scale = 0;
     }
 
     public JSpinner getSpinner(){
         return spinner;
     }
-    public void setpreviousScale(float scle){
+    public void setPreviousScale(float scle){
         scale = scle;
     }
 
-    public ChangeListener getSpinnerlistener(){
+    public ChangeListener getSpinnerListener(){
         return spinnerlistener;
     }
 
@@ -140,18 +140,16 @@ class ImageZoom
         spinnerlistener = new ChangeListener()
         {
             public void stateChanged(ChangeEvent e) {
-                previousScale = scale;
+                previousscale = scale;
                 scale = ((Double) spinner.getValue()).floatValue();
 
-                if (!(previousScale == scale)) {
-                    if (previousScale > scale || (previousScale == 0 && scale < 1.00)) {
-                        anInterface.updateImagePanelListscale(-0.05);  //zoom out
-                        anInterface.updateObjectPanelListscale(-0.05);
-                        imagePanel.changeScale(-0.05);
+                if (!(previousscale == scale)) {
+                    if (previousscale > scale || (previousscale == 0 && scale < 1.00)) {
+                        aninterface.updateMapInterfaceScale(-0.05);
+                        imagepanel.changeScale(-0.05);
                     } else {
-                        anInterface.updateImagePanelListscale(0.05);  //zoom in
-                        anInterface.updateObjectPanelListscale(0.05);
-                        imagePanel.changeScale(0.05);
+                        aninterface.updateMapInterfaceScale(0.05);
+                        imagepanel.changeScale(0.05);
                     }
 
                 }

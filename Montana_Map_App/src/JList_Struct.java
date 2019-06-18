@@ -7,62 +7,46 @@ import java.io.Serializable;
 
 public class JList_Struct implements Serializable {
     public static final long serialVersionUID = 1L;
-    private transient JList<String> lst;
-    private transient DefaultListModel<String> str_list;
-    private transient DefaultListModel<Location_Model> rlist;
-    private transient JScrollPane lstscroller;
+    private transient NestedList nestedList;
+    private transient DefaultListModel<LocationModel> locationList;
 
-    public JList_Struct(DefaultListModel<Location_Model> list) {
-        //make r list not == list, but add every item's string location to r list instead
-        str_list = new DefaultListModel<>();
-        for (int i = 0; i < list.size(); i++){
-            str_list.addElement(list.getElementAt(i).getLocation_name());
-        }
-        lst = new JList<>(str_list);
-        rlist = list;
-
-        //size the array and populate it based on saved information
-        lst.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        lst.setLayoutOrientation(JList.VERTICAL);
-        lst.setVisibleRowCount(10);
-        lst.setFixedCellWidth(30);
-        lstscroller = new JScrollPane(lst);
-        lstscroller.createVerticalScrollBar();
+    public JList_Struct(DefaultListModel<LocationModel> list) {
+        nestedList = new NestedList();
+        nestedList.setVisible(true);
+        locationList = list;
     }
 
     private void writeObject(ObjectOutputStream out) throws IOException {
         out.defaultWriteObject();
-        out.writeObject(this.str_list);
-        out.writeObject(this.rlist);
-        //out.writeObject(this.lstscroller);
+        out.writeObject(this.locationList);
     }
 
     private void readObject(ObjectInputStream in) throws IOException,ClassNotFoundException {
         in.defaultReadObject();
-        this.str_list = (DefaultListModel<String>) in.readObject();
-        this.rlist = (DefaultListModel<Location_Model>) in.readObject();
-        lst = new JList<>(str_list);
-        lst.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        lst.setLayoutOrientation(JList.VERTICAL);
-        lst.setVisibleRowCount(10);
-        lst.setFixedCellWidth(30);
-        lstscroller = new JScrollPane(lst);
-        lstscroller.createVerticalScrollBar();
-        //this.lstscroller = (JScrollPane) in.readObject();
+        this.locationList = (DefaultListModel<LocationModel>) in.readObject();
+        nestedList = new NestedList();
+        for (int i = 0; i < locationList.size(); i++){
+            nestedList.addItems(locationList.get(i).getLocationname(), locationList.get(i).getObjects());
+        }
+        nestedList.setVisible(true);
+
+
     }
 
-    public JList<String> getJlist() {
-        return lst;
+    public NestedList getNestedList(){
+        return nestedList;
     }
 
-    public DefaultListModel<Location_Model> getRlist() {
-        return rlist;
+    public JList<NestedList.NestedItem> getJFirstList() {
+        return nestedList.getJfirstList();
     }
 
-    public DefaultListModel<String> getStrlist(){return str_list;}
+    public JList<NestedList.NestedItem> getJSecondList() {
+        return nestedList.getJsecondList();
+    }
 
-    public JScrollPane getListScroller() {
-        return lstscroller;
+    public DefaultListModel<LocationModel> getLocationList() {
+        return locationList;
     }
 
 }

@@ -1,9 +1,6 @@
-
-
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.event.ChangeListener;
-import javax.xml.soap.Text;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.AffineTransform;
@@ -16,12 +13,10 @@ import java.util.List;
 
 
 public class Interface extends JFrame {
-    private int lstactvfrm;
-    private int  fileNumber = 0, objectnumber = 0, objecttextnumber = 0;
+    private int  fileNumber = 0, objectnumber = 0, objecttextnumber = 0, locationtextnumber;
     private JList_Struct lst;
     private JScrollPane scrollPane;
-    private DefaultListModel<JPanel> lst_jp;
-    private JPanel object_panel;
+    private JPanel objectpanel, glasspane;
     private Point pointStart = null;
     private Point pointEnd = null;
     private Point trueStart = null;
@@ -31,7 +26,7 @@ public class Interface extends JFrame {
     private List<ImagePanel> imagePanelList = new ArrayList<>();
     private List<ImagePanel> objectPanelList = new ArrayList<>();
     private List<ImagePanel> objectTextPanelList = new ArrayList<>();
-
+    private List<ImagePanel> locationTextPanelList = new ArrayList<>();
 
 
     ArrayList<Shape> shapeList = new ArrayList<>();
@@ -44,7 +39,8 @@ public class Interface extends JFrame {
         Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
 
             public void run() {
-                if(!lst.getRlist().isEmpty()) {
+                if(!lst.getLocationList().isEmpty()) {
+                    //save the contents of lst for future use
                     File f = new File("mapdata.ser");
                     try {
                         // write object to file
@@ -72,9 +68,8 @@ public class Interface extends JFrame {
 
     public void run() {
         File savefile = new File("mapdata.ser");
-        panel = new ImagePanel( "C:\\Users\\Xain\\Pictures\\Montanaappmap\\Montana_Topo_Map.png");
+        panel = new ImagePanel( "examplemap.jpg");
         panel.setLayout(null);
-        lstactvfrm = 0;
         scrollPane = new JScrollPane(panel);
         zoom = new ImageZoom(panel, this);
         this.add(BorderLayout.CENTER, scrollPane);
@@ -93,53 +88,69 @@ public class Interface extends JFrame {
                 e.printStackTrace();
             }
         } else {
-            DefaultListModel<Location_Model> lst_n = new DefaultListModel<>();
+            DefaultListModel<LocationModel> lst_n = new DefaultListModel<>();
             lst = new JList_Struct(lst_n);
         }
+        JPanel buttonPanelholder = new JPanel();
+        JPanel bufferPanel0 = new JPanel();
 
+        bufferPanel0.setLayout(new BorderLayout());
+        buttonPanelholder.setLayout(new GridLayout(2,2));
         JPanel buttonPanel = new JPanel();
-        buttonPanel.setLayout(new BorderLayout());
+        GridLayout layout = new GridLayout(4,2);
+        buttonPanel.setLayout(layout);
         JLayeredPane lp = getLayeredPane();
-        lst_jp = new DefaultListModel<>();
+        buttonPanelholder.add(buttonPanel);
+        buttonPanelholder.add(bufferPanel0);
 
 
 
+        final JButton remove_object_entry_button = new JButton("Remove selected object");
+        final JButton remove_location_entry_button = new JButton("Remove selected map location");
+        final JButton add_entry_button = new JButton("Add new location");
+        final JButton add_object_button = new JButton("Add new object");
+
+        buttonPanel.add(add_entry_button);
+        buttonPanel.add(add_object_button);
+        buttonPanel.add(remove_location_entry_button);
+        buttonPanel.add(remove_object_entry_button);
+        buttonPanel.add(zoom.getUIPanel());
 
 
-        final JButton remove_entry_button = new JButton("Remove the selected map location");
-        final JButton add_entry_button = new JButton("Add new map location");
-        final JButton add_object_button = new JButton("Add new object to the location");
-        buttonPanel.add(BorderLayout.EAST, add_object_button);
-        buttonPanel.add(BorderLayout.NORTH,remove_entry_button);
-        buttonPanel.add(BorderLayout.CENTER,add_entry_button);
-        buttonPanel.add(BorderLayout.WEST,zoom.getUIPanel());
-        buttonPanel.add(BorderLayout.AFTER_LAST_LINE, lst.getListScroller());
-        this.add(BorderLayout.WEST, buttonPanel);
-        remove_entry_button.setPreferredSize(new Dimension(remove_entry_button.getPreferredSize().width, 100));
-        add_entry_button.setPreferredSize(new Dimension(add_entry_button.getPreferredSize().width, 100));
-        add_object_button.setPreferredSize(new Dimension(add_entry_button.getPreferredSize().width, 100));
+        bufferPanel0.add(lst.getNestedList());
+        this.add(BorderLayout.WEST,buttonPanelholder);
+
+        remove_object_entry_button.setPreferredSize(new Dimension(remove_location_entry_button.getPreferredSize().width, 50));
+        remove_location_entry_button.setPreferredSize(new Dimension(remove_location_entry_button.getPreferredSize().width, 50));
+        add_entry_button.setPreferredSize(new Dimension(add_entry_button.getPreferredSize().width, 50));
+        add_object_button.setPreferredSize(new Dimension(add_entry_button.getPreferredSize().width, 50));
+
         pack();
 
-        JPanel object_pane = Draw_Object();
+        JPanel object_pane = drawObject();
         object_pane.setLocation(scrollPane.getLocation());
-        object_panel = object_pane;
+        objectpanel = object_pane;
         lp.add(object_pane);
 
-        JPanel glass_pane = Draw_Line();
-        glass_pane.setLocation(scrollPane.getLocation());
-        lst_jp.addElement(glass_pane);
-        lp.add(glass_pane);
+        glasspane = drawLine();
+        glasspane.setLocation(scrollPane.getLocation());
+        lp.add(glasspane);
 
 
         lp.addComponentListener(new JLayeredPaneListener(scrollPane));
-        //allow user to doubbleclick on the already entered item to draw additional or re-draw
 
-
-        remove_entry_button.addActionListener(new ActionListener() {
+        remove_location_entry_button.addActionListener(new ActionListener() {
 
             @Override
             public void actionPerformed(ActionEvent e) {
-                Remove_Entry();
+                removeLocationEntry();
+            }
+        });
+
+        remove_object_entry_button.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                removeObjectEntry();
             }
         });
 
@@ -148,22 +159,25 @@ public class Interface extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (panel.getScale() == 1) {
-                    if (Add_Entry(getInputFromUser())) {
-                        glass_pane.setSize(scrollPane.getSize().width - 18, scrollPane.getSize().height - 18);
+                    if (addEntry(getInputFromUser())) {
+                        glasspane.setSize(scrollPane.getSize().width - 18, scrollPane.getSize().height - 18);
+                        // -18 for the size of the scrollbars at the bottom of the panel/ side of panel.
                         lineDrawn = false;
-                        lst_jp.get(lstactvfrm).setEnabled(true);
-                        lst_jp.get(lstactvfrm).setVisible(true);
+                        glasspane.setEnabled(true);
+                        glasspane.setVisible(true);
                     }
                 }
                 else {
                     imagePanelList.forEach(imagePanel -> imagePanel.setScale(1));
                     objectPanelList.forEach(objectpanel -> objectpanel.setScale(1));
                     objectTextPanelList.forEach(objecttextpanel -> objecttextpanel.setScale(1));
+                    locationTextPanelList.forEach(locationpanel -> locationpanel.setScale(1));
                     panel.setScale(1);
-                    ChangeListener spinnerlistener = zoom.getSpinnerlistener();
-                    zoom.getSpinner().removeChangeListener(spinnerlistener);
+
+                    ChangeListener spinnerlistener = zoom.getSpinnerListener();
+                    zoom.getSpinner().removeChangeListener(spinnerlistener); //this is needed, was firing when changed manually
                     zoom.getSpinner().setValue(1.00);
-                    zoom.setpreviousScale(1);
+                    zoom.setPreviousScale(1);
                     zoom.getSpinner().addChangeListener(spinnerlistener);
 
                     JOptionPane.showMessageDialog(panel,"Can only draw at 100% zoom. Please try Again.");
@@ -174,98 +188,161 @@ public class Interface extends JFrame {
         add_object_button.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (panel.getScale() == 1) {
-                    if (Add_Object_Entry(getObjectInputFromUser())) {
-                        object_pane.setSize(scrollPane.getSize().width - 18, scrollPane.getSize().height - 18);
-                        lineDrawn = false;
-                        object_panel.setEnabled(true);
-                        object_panel.setVisible(true);
-                    }
-                }
-                else {
-                    imagePanelList.forEach(imagePanel -> imagePanel.setScale(1));
-                    objectPanelList.forEach(objectpanel -> objectpanel.setScale(1));
-                    objectTextPanelList.forEach(objecttextpanel -> objecttextpanel.setScale(1));
-                    panel.setScale(1);
-                    ChangeListener spinnerlistener = zoom.getSpinnerlistener();
-                    zoom.getSpinner().removeChangeListener(spinnerlistener);
-                    zoom.getSpinner().setValue(1.00);
-                    zoom.setpreviousScale(1);
-                    zoom.getSpinner().addChangeListener(spinnerlistener);
+                if(!(lst.getNestedList().getJfirstList().getSelectedValue() == null)) {
+                    if (panel.getScale() == 1) {
+                        if (addObjectEntry(getObjectInputFromUser())) {
+                            object_pane.setSize(scrollPane.getSize().width - 18, scrollPane.getSize().height - 18);
+                            lineDrawn = false;
+                            objectpanel.setEnabled(true);
+                            objectpanel.setVisible(true);
+                        }
+                    } else {
+                        imagePanelList.forEach(imagePanel -> imagePanel.setScale(1));
+                        objectPanelList.forEach(objectpanel -> objectpanel.setScale(1));
+                        objectTextPanelList.forEach(objecttextpanel -> objecttextpanel.setScale(1));
+                        locationTextPanelList.forEach(locationpanel -> locationpanel.setScale(1));
+                        panel.setScale(1);
 
-                    JOptionPane.showMessageDialog(panel,"Can only draw at 100% zoom. Please try Again.");
+                        ChangeListener spinnerlistener = zoom.getSpinnerListener();
+                        zoom.getSpinner().removeChangeListener(spinnerlistener);
+                        zoom.getSpinner().setValue(1.00);
+                        zoom.setPreviousScale(1);
+                        zoom.getSpinner().addChangeListener(spinnerlistener);
+
+                        JOptionPane.showMessageDialog(panel, "Can only draw at 100% zoom. Please try Again.");
+                    }
+                }else {
+                    JOptionPane.showMessageDialog(panel, "Must select a location to place an object.");
                 }
             }
         });
 
-        lst.getJlist().addMouseListener(new MouseAdapter() {
+        lst.getJFirstList().addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                int index = lst.getJlist().getSelectedIndex();
+                int index = lst.getJFirstList().getSelectedIndex();
                 super.mouseClicked(e);
                 if (e.getClickCount() == 2) {
-                    scrollPane.getViewport().setViewPosition(lst.getRlist().get(index).getPoint()); //center it, currently off because topleft corner
+                    scrollPane.getViewport().setViewPosition(lst.getLocationList().get(index).getLocationviewpoint()); //center it, currently off because topleft corner
                 } else if (e.getClickCount() == 3) {
-
+                    // TODO: 6/17/2019 display the related fields to the user
                 }
             }
         });
 
-        lst.getJlist().setVisible(true);
-        for (int i = 0; i < lst.getRlist().size(); i++){ //place object?
-            placeImage(lst.getRlist().getElementAt(i).getFile_path());
-            placeName(lst.getRlist().getElementAt(i));
-
-
-            for(int j = 0; j < (lst.getRlist().getElementAt(i).getObjects()).size(); j++){
-                placeObjectName(lst.getRlist().getElementAt(i).getObjects().get(j));
-                placeObject(lst.getRlist().getElementAt(i).getObjects().get(j).getFile_path());
-                objectnumber = (lst.getRlist().getElementAt(i).getObjects().get(j).getObjectnumber() > objectnumber) ?
-                        lst.getRlist().getElementAt(i).getObjects().get(j).getObjectnumber() + 1 : objectnumber + 1;
+        lst.getJSecondList().addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                super.mouseClicked(e);
+                // TODO: 6/17/2019 display related fields to the user
             }
-            fileNumber = (lst.getRlist().getElementAt(i).getFilenumber() > fileNumber) ?
-                    lst.getRlist().getElementAt(i).getFilenumber() + 1 : fileNumber + 1; // increase to 1 + highest file found this may be wrong
+        });
+
+        lst.getJFirstList().setVisible(true);
+
+        //for every location and object place all of the images and get the max numbers for each
+        for (int i = 0; i < lst.getLocationList().size(); i++){
+            placeImage(lst.getLocationList().getElementAt(i).getFilepath());
+            placeTextLocation(lst.getLocationList().getElementAt(i).getLocationtextfilepath());
+
+
+            for(int j = 0; j < (lst.getLocationList().getElementAt(i).getObjects()).size(); j++){
+                placeTextObject(lst.getLocationList().getElementAt(i).getObjects().get(j).gettextFile_path());
+                placeObject(lst.getLocationList().getElementAt(i).getObjects().get(j).getFile_path());
+                objectnumber = (lst.getLocationList().getElementAt(i).getObjects().get(j).getObjectnumber() > objectnumber) ?
+                        lst.getLocationList().getElementAt(i).getObjects().get(j).getObjectnumber() + 1 : objectnumber + 1;
+
+                objecttextnumber = (lst.getLocationList().getElementAt(i).getObjects().get(j).getObjecttextnumber() > objecttextnumber) ?
+                        lst.getLocationList().getElementAt(i).getObjects().get(j).getObjecttextnumber() + 1 : objecttextnumber + 1;
+            }
+
+            fileNumber = (lst.getLocationList().getElementAt(i).getFilenumber() > fileNumber) ?
+                    lst.getLocationList().getElementAt(i).getFilenumber() + 1 : fileNumber + 1; // increase to 1 + highest file found this may be wrong
+
+            locationtextnumber = (lst.getLocationList().getElementAt(i).getLocationnumber() > locationtextnumber) ?
+                    lst.getLocationList().getElementAt(i).getLocationnumber() + 1 : locationtextnumber + 1;
         }
     } // run()
 
-    public boolean Add_Entry(Location_Model loc) {
-        if (loc.getLocation_name() != null && loc.getElevtion() != 0 && loc.getYear() != null ) {
-            lst.getStrlist().addElement(loc.getLocation_name());
-            lst.getRlist().addElement(loc);
+
+
+
+
+    public boolean addEntry(LocationModel loc) {
+        if (loc.getLocationname() != null && loc.getElevation() != 0 && loc.getYear() != null ) {
+            lst.getLocationList().addElement(loc);
+            lst.getNestedList().addItem(loc.getLocationname());
             return true;
         } else {
             return false;
         }
     }
 
-    public boolean Add_Object_Entry(Object_Model obj) {
-        if (obj.getName() != null && obj.getElevation() != 0 && obj.getYear() != 0 && lst.getJlist().getSelectedIndex() != -1) {
+    public boolean addObjectEntry(Object_Model obj) {
+        if (obj.getName() != null && obj.getElevation() != 0 && obj.getYear() != 0 && lst.getJFirstList().getSelectedIndex() != -1) {
             if(obj.getType() == null){
                 obj.setType("-");
             }
-            lst.getRlist().getElementAt(lst.getJlist().getSelectedIndex()).addObject(obj);
+            lst.getLocationList().getElementAt(lst.getJFirstList().getSelectedIndex()).addObject(obj);
+            lst.getNestedList().addSubItem(obj.getName());
             return true;
         } else {
             return false;
         }
     }
 
-    public void Remove_Entry() {
-        if (lst.getStrlist().isEmpty() || lst.getJlist().getSelectedIndex() == -1) {
+    public void removeLocationEntry() {
+        if (lst.getLocationList().isEmpty() || lst.getJFirstList().getSelectedIndex() == -1) {
+            JOptionPane.showMessageDialog(panel,"Please select a Location to delete.");
         } else {
-            int index = lst.getJlist().getSelectedIndex();
-            File to_delete = new File(lst.getRlist().get(index).file_path);
-            to_delete.delete();
-            lst.getRlist().getElementAt(index).removeObjects();
-            lst.getStrlist().remove(index);
-            lst.getRlist().remove(index);
+            int index = lst.getJFirstList().getSelectedIndex();
+
+            File loc_to_delete = new File(lst.getLocationList().get(index).getFilepath());
+            File loc_text_to_delete = new File(lst.getLocationList().get(index).getLocationtextfilepath());
+            loc_text_to_delete.delete();
+            loc_to_delete.delete();
+            lst.getNestedList().removeSubItems();
+            for (int i = 0; i < lst.getLocationList().get(index).getObjects().size(); i++){
+                panel.remove(lst.getLocationList().get(index).getObjects().get(i).getObjectpanel());
+                panel.remove(lst.getLocationList().get(index).getObjects().get(i).gettextSpot());
+                File obj_to_delete = new File(lst.getLocationList().get(index).getObjects().get(i).getFile_path());
+                obj_to_delete.delete();
+                File txt_obj_to_delete = new File(lst.getLocationList().get(index).getObjects().get(i).gettextFile_path());
+                txt_obj_to_delete.delete();
+            }
+            lst.getNestedList().removeItem();
+            lst.getLocationList().getElementAt(index).removeObjects();
+            lst.getLocationList().remove(index);
             panel.remove(imagePanelList.get(index));
+            panel.remove(locationTextPanelList.get(index));
             imagePanelList.remove(index);
+            locationTextPanelList.remove(index);
             repaint();
         }
     }
 
-    public Location_Model getInputFromUser() {
+    public void removeObjectEntry() {
+        if (!lst.getLocationList().isEmpty() && !(lst.getLocationList().getElementAt(lst.getJFirstList().getSelectedIndex()).getObjects().isEmpty())) {
+            int first_index = lst.getJFirstList().getSelectedIndex();
+            int second_index = lst.getJSecondList().getSelectedIndex();
+
+            lst.getNestedList().removeSubItem();
+            panel.remove(lst.getLocationList().get(first_index).getObjects().get(second_index).getObjectpanel());
+            panel.remove(lst.getLocationList().get(first_index).getObjects().get(second_index).gettextSpot());
+
+            File obj_to_delete = new File(lst.getLocationList().get(first_index).getObjects().get(second_index).getFile_path());
+            obj_to_delete.delete();
+            File txt_obj_to_delete = new File(lst.getLocationList().get(first_index).getObjects().get(second_index).gettextFile_path());
+            txt_obj_to_delete.delete();
+            lst.getLocationList().getElementAt(first_index).getObjects().remove(second_index);
+            repaint();
+        }
+        else{
+            JOptionPane.showMessageDialog(panel,"Please select a Object to delete.");
+        }
+    }
+
+    public LocationModel getInputFromUser() {
         JTextField loc_name = new JTextField(5);
         JTextField year = new JTextField(5);
         JTextField elevation = new JTextField(5);
@@ -282,17 +359,20 @@ public class Interface extends JFrame {
 
         int result = JOptionPane.showConfirmDialog(null, myPanel,
                 "Please Enter Location name, Year found/current year, Elevation of the area", JOptionPane.OK_CANCEL_OPTION);
-        if (result == JOptionPane.OK_OPTION) {
+        if (result == JOptionPane.OK_OPTION && !loc_name.getText().isEmpty()  && !year.getText().isEmpty() && !elevation.getText().isEmpty()) {
             try{
                 Integer.parseInt(elevation.getText());
             }catch (NumberFormatException e) {
-                return new Location_Model();
+                return new LocationModel();
             }
-            Location_Model location = new Location_Model(loc_name.getText(),year.getText()
+            LocationModel location = new LocationModel(loc_name.getText(),year.getText()
                     ,Integer.parseInt(elevation.getText()));
             return location;
+        } else {
+            JOptionPane.showMessageDialog(panel,"Please enter all relevant fields.");
+
         }
-        return new Location_Model();
+        return new LocationModel();
     }
 
     public Object_Model getObjectInputFromUser() {
@@ -315,7 +395,7 @@ public class Interface extends JFrame {
 
         int result = JOptionPane.showConfirmDialog(null, myPanel,
                 "Please Enter Object name, Year found/current year, Elevation of the area, and optional object type", JOptionPane.OK_CANCEL_OPTION);
-        if (result == JOptionPane.OK_OPTION) {
+        if (result == JOptionPane.OK_OPTION && !obj_name.getText().isEmpty() && !year.getText().isEmpty() && !elevation.getText().isEmpty()) {
                 try {
                     Integer.parseInt(elevation.getText());
                     Integer.parseInt(year.getText());
@@ -333,10 +413,13 @@ public class Interface extends JFrame {
                     return object;
                 }
         }
+        else{
+            JOptionPane.showMessageDialog(panel,"Please enter all relevant fields.");
+        }
         return new Object_Model();
     }
 
-    public JPanel Draw_Line() {
+    public JPanel drawLine() {
         JPanel p = new JPanel(){
             @Override
             public void paintComponent(Graphics g){
@@ -359,23 +442,24 @@ public class Interface extends JFrame {
                 }
 
             }
-
             public void mouseReleased(MouseEvent e) {
                 if(!lineDrawn) {
                     pointStart = null;
                     lineDrawn = true;
                     currentshape.lineTo(trueStart.getX(), trueStart.getY());
                     saveImage(captureImage(currentshape));
-                    placeImage();
-                    lst.getRlist().getElementAt(lst.getRlist().getSize() - 1).setPoint(scrollPane.getViewport().getViewPosition());
-                    lst.getRlist().getElementAt(lst.getRlist().getSize() - 1).setDrawingloc(trueStart);
-                    placeName(new Point(
+                    saveTextImage(texttoImage(lst.getLocationList().getElementAt(lst.getLocationList().getSize() - 1).getLocationname(),new Point(
                             (int)trueStart.getX() + (int)scrollPane.getViewport().getViewPosition().getX(),
-                            (int)trueStart.getY() + (int)scrollPane.getViewport().getViewPosition().getY()));
+                            (int)trueStart.getY() + (int)scrollPane.getViewport().getViewPosition().getY())));
+
+                    placeImage();
+                    placeTextLocation();
+                    lst.getLocationList().getElementAt(lst.getLocationList().getSize() - 1).setLocationviewpoint(scrollPane.getViewport().getViewPosition());
+                    lst.getLocationList().getElementAt(lst.getLocationList().getSize() - 1).setDrawingloc(trueStart);
                     shapeList.remove(currentshape);
                     currentshape.reset();
-                    lst_jp.get(lstactvfrm).setEnabled(false);
-                    lst_jp.get(lstactvfrm).setVisible(false);
+                    glasspane.setEnabled(false);
+                    glasspane.setVisible(false);
                     return;
                 }
             }
@@ -388,7 +472,7 @@ public class Interface extends JFrame {
                     pointStart = pointEnd;
                     pointEnd = e.getPoint();
                     currentshape.lineTo(pointEnd.getX(),pointEnd.getY());
-                    lst_jp.get(lstactvfrm).repaint();
+                    glasspane.repaint();
                 }
             }
         });
@@ -399,7 +483,7 @@ public class Interface extends JFrame {
         return p;
     }
 
-    public JPanel Draw_Object() {
+    public JPanel drawObject() {
         JPanel p = new JPanel(){
             @Override
             public void paintComponent(Graphics g){
@@ -425,21 +509,28 @@ public class Interface extends JFrame {
             public void mouseReleased(MouseEvent e) {
                 if(!lineDrawn) {
                     lineDrawn = true;
+                    //save the current shape then place it on panel.
                     saveObjectImage(captureImage(currentshape));
                     placeObject();
-                    lst.getRlist().getElementAt(lst.getRlist().getSize() - 1)
+
+                    lst.getLocationList().getElementAt(lst.getLocationList().getSize() - 1)
                             .getObjects()
-                            .get(lst.getRlist().getElementAt(lst.getRlist().getSize() -1).getObjects().size()-1)
+                            .get(lst.getLocationList().getElementAt(lst.getLocationList().getSize() -1).getObjects().size()-1)
                             .setObjectloc(new Point(
                                     (int)pointStart.getX() + (int)scrollPane.getViewport().getViewPosition().getX(),
                                     (int)pointStart.getY() + (int)scrollPane.getViewport().getViewPosition().getY()));
-                    placeObjectName(new Point(
+
+                    BufferedImage textimg = texttoImage(lst.getNestedList().getJfirstList().getSelectedValue().getSubitem(lst.getNestedList().getJfirstList().getSelectedValue().getSubitemsize() - 1),new Point(
                             (int)pointStart.getX() + (int)scrollPane.getViewport().getViewPosition().getX(),
                             (int)pointStart.getY() + (int)scrollPane.getViewport().getViewPosition().getY()));
+                    //save the current text then places it on panel.
+                    saveObjectTextImage(textimg);
+                    placeTextObject();
+
                     shapeList.remove(currentshape);
                     currentshape.reset();
-                    object_panel.setEnabled(false);
-                    object_panel.setVisible(false);
+                    objectpanel.setEnabled(false);
+                    objectpanel.setVisible(false);
                     pointStart = null;
                     return;
                 }
@@ -483,16 +574,18 @@ public class Interface extends JFrame {
             System.err.println(e);
         }
     }
-    private void saveObjectTextImage(JPanel imagepanel){
+    private void saveTextImage(BufferedImage txtimg){
+        try {
+            String filename = "LocationText" + locationtextnumber + ".png";
+            ImageIO.write(txtimg, "png", new File(filename));
+        } catch (IOException e) {
+            System.err.println(e);
+        }
+    }
+    private void saveObjectTextImage(BufferedImage txtimg){
         try {
             String filename = "ObjectText" + objecttextnumber + ".png";
-            int w = imagepanel.getWidth(), h = imagepanel.getHeight();
-            BufferedImage image = new BufferedImage(w, h,
-                    BufferedImage.TYPE_INT_ARGB);
-            Graphics2D g2 = image.createGraphics();
-            imagepanel.printAll(g2);
-            g2.dispose();
-            ImageIO.write(image, "png", new File(filename));
+            ImageIO.write(txtimg, "png", new File(filename));
         } catch (IOException e) {
             System.err.println(e);
         }
@@ -501,10 +594,10 @@ public class Interface extends JFrame {
     private void placeImage(){
         String filename = "SAVE" + fileNumber + ".png";
         ImageIcon imageIcon = new ImageIcon(filename);
-        lst.getRlist().getElementAt(lst.getRlist().getSize()-1).setFilenumber(fileNumber);
+        lst.getLocationList().getElementAt(lst.getLocationList().getSize()-1).setFilenumber(fileNumber);
         fileNumber++;
         Image tmpImage = imageIcon.getImage();
-        lst.getRlist().getElementAt(lst.getRlist().getSize()-1).setFile_path(filename);
+        lst.getLocationList().getElementAt(lst.getLocationList().getSize()-1).setFilepath(filename);
         BufferedImage image = new BufferedImage(imageIcon.getIconWidth(), imageIcon.getIconHeight(), BufferedImage.TYPE_INT_ARGB);
         image.getGraphics().drawImage(tmpImage, 0, 0, null);
         tmpImage.flush();
@@ -547,10 +640,10 @@ public class Interface extends JFrame {
         tmpImage.flush();
 
         ImagePanel objectPanel = new ImagePanel(object, panel.getScale());
-        int index = lst.getJlist().getSelectedIndex();
-        ArrayList<Object_Model> objects = lst.getRlist().getElementAt(index).getObjects();
-        objects.get(objects.size() - 1).setFile_path(filename);
-        objects.get(objects.size() - 1).setSpot(objectPanel);
+        int index = lst.getJFirstList().getSelectedIndex();
+        ArrayList<Object_Model> objects = lst.getLocationList().getElementAt(index).getObjects();
+        objects.get(objects.size() - 1).setFilePath(filename);
+        objects.get(objects.size() - 1).setObjectpanel(objectPanel); //objectpanel is getspot
         objectPanelList.add(objectPanel);
         panel.add(objectPanel);
         objectPanel.setBounds(
@@ -576,11 +669,8 @@ public class Interface extends JFrame {
                 panel.getHeight());
         objectPanel.setVisible(true);
     }
-    private void placeTextObject(){
-        // TODO: 6/6/2019 got it as image/imapgepanel just have to place it (call this somewhere)and then place it correctly within the right object model
-        // TODO: 6/6/2019 keep track of it and load/save them correctly and delete correctly. brain mush atm.
-        // TODO: 6/6/2019 Gotta make 2 of these for the location text as well now.
-        String filename = "Object" + objecttextnumber + ".png";
+    private void placeTextObject(){ //place these when the object gets placed/loaded.
+        String filename = "ObjectText" + objecttextnumber + ".png";
         ImageIcon objecttextIcon = new ImageIcon(filename);
         Image tmpImage = objecttextIcon.getImage();
         BufferedImage objecttext = new BufferedImage(objecttextIcon.getIconWidth(), objecttextIcon.getIconHeight(), BufferedImage.TYPE_INT_ARGB);
@@ -590,10 +680,10 @@ public class Interface extends JFrame {
         tmpImage.flush();
 
         ImagePanel objecttextPanel = new ImagePanel(objecttext, panel.getScale());
-        int index = lst.getJlist().getSelectedIndex();
-        ArrayList<Object_Model> objects = lst.getRlist().getElementAt(index).getObjects();
+        int index = lst.getJFirstList().getSelectedIndex();
+        ArrayList<Object_Model> objects = lst.getLocationList().getElementAt(index).getObjects();
         objects.get(objects.size() - 1).settextFile_path(filename);
-        objects.get(objects.size() - 1).settextSpot(objecttextPanel);
+        objects.get(objects.size() - 1).settextPanel(objecttextPanel);
         objectTextPanelList.add(objecttextPanel);
         panel.add(objecttextPanel);
         objecttextPanel.setBounds(
@@ -620,6 +710,53 @@ public class Interface extends JFrame {
         objecttextPanel.setVisible(true);
     }
 
+    private void placeTextLocation(){ //place these when the location gets drawn/placed/loaded
+        int index = lst.getLocationList().getSize() - 1;
+        String filename = "LocationText" + locationtextnumber + ".png";
+        ImageIcon locationtextIcon = new ImageIcon(filename);
+        Image tmpImage = locationtextIcon.getImage();
+        BufferedImage locationtext = new BufferedImage(locationtextIcon.getIconWidth(), locationtextIcon.getIconHeight(), BufferedImage.TYPE_INT_ARGB);
+        locationtext.getGraphics().drawImage(tmpImage, 0, 0, null);
+        //add the object to the location/object_model
+        lst.getLocationList().getElementAt(index).setLocationnumber(locationtextnumber);
+        locationtextnumber++;
+        tmpImage.flush();
+
+        ImagePanel locationtextPanel = new ImagePanel(locationtext, panel.getScale());
+        lst.getLocationList().get(index).setLocationtextfilepath(filename);
+        locationTextPanelList.add(locationtextPanel);
+        panel.add(locationtextPanel);
+        locationtextPanel.setBounds(
+                0,0,
+                panel.getWidth(),
+                panel.getHeight());
+        locationtextPanel.setVisible(true);
+    }
+
+    private void placeTextLocation(String filename){
+        ImageIcon locationtextIcon = new ImageIcon(filename);
+        Image tmpImage = locationtextIcon.getImage();
+        BufferedImage locationimg = new BufferedImage(locationtextIcon.getIconWidth(), locationtextIcon.getIconHeight(), BufferedImage.TYPE_INT_ARGB);
+        locationimg.getGraphics().drawImage(tmpImage, 0, 0, null);
+        tmpImage.flush();
+
+        ImagePanel locationtextPanel = new ImagePanel(locationimg, panel.getScale());
+        locationTextPanelList.add(locationtextPanel); //might not need this?
+        panel.add(locationtextPanel);
+        locationtextPanel.setBounds(
+                0,0,
+                panel.getWidth(),
+                panel.getHeight());
+        locationtextPanel.setVisible(true);
+    }
+
+    public void updateMapInterfaceScale(double scale){
+        updateImagePanelListscale(scale);
+        updateObjectPanelListscale(scale);
+        updateObjectTextPanelListscale(scale);
+        updateLocationTextPanelListscale(scale);
+    }
+
 
     public void updateImagePanelListscale(double scale){
         imagePanelList.forEach(imagePanel -> imagePanel.changeScale(scale));
@@ -630,6 +767,10 @@ public class Interface extends JFrame {
     public void updateObjectTextPanelListscale(double scale){
         objectTextPanelList.forEach(objecttexpanel -> objecttexpanel.changeScale(scale));
     }
+    public void updateLocationTextPanelListscale(double scale){
+        locationTextPanelList.forEach(locationtextpanel -> locationtextpanel.changeScale(scale));
+    }
+
 
 
     public JPanel captureImage(Shape p){
@@ -670,10 +811,10 @@ public class Interface extends JFrame {
 
         return mappanel;
     }
-    public BufferedImage TexttoImage(String text, Point location) {
+    public BufferedImage texttoImage(String text, Point location) {
         BufferedImage img = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g2d = img.createGraphics();
-        Font font = new Font("Arial", Font.BOLD, 48);
+        Font font = new Font("Arial", Font.HANGING_BASELINE, 20);
         g2d.setFont(font);
         int width = panel.getWidth();
         int height = panel.getHeight();
@@ -690,111 +831,9 @@ public class Interface extends JFrame {
         g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
         g2d.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
         g2d.setFont(font);
-        g2d.setColor(Color.BLACK);
+        g2d.setColor(Color.RED); // TODO: 6/17/2019 change to a color that isn't hideous
         g2d.drawString(text, (int)location.getX(), (int)location.getY());
         g2d.dispose();
-        try {
-            ImageIO.write(img, "png", new File("Text.png"));
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
         return img;
     }
-    //   private void placeName(Point location){ //legacy
-//        JLabel label = new JLabel((lst.getRlist().getElementAt(lst.getRlist().getSize() - 1).getLocation_name()));
-//        int textbuffer = 25;
-//        label.setSize(new Dimension(
-//                (int) label.getPreferredSize().getWidth() + textbuffer ,
-//                (int) label.getPreferredSize().getHeight() + textbuffer));
-//        label.setLocation(location);
-//        Font labelFont = label.getFont();
-//        String labelText = label.getText();
-//
-//        int stringWidth = label.getFontMetrics(labelFont).stringWidth(labelText);
-//        int componentWidth = label.getWidth();
-//
-//        // Find out how much the font can grow in width.
-//        double widthRatio = (double)componentWidth / (double)stringWidth;
-//
-//        int newFontSize = (int)(labelFont.getSize() * widthRatio);
-//        int componentHeight = label.getHeight();
-//
-//        // Pick a new font size so it will not be larger than the height of label.
-//        int fontSizeToUse = Math.min(newFontSize, componentHeight);
-//
-//        // Set the label's font size to the newly determined size.
-//        label.setFont(new Font(labelFont.getName(), Font.BOLD, fontSizeToUse));
-//        label.setForeground(Color.RED);
-//        panel.add(label);
-//        label.setVisible(true);
-//        label.setOpaque(false);
-//    }
-//
-//    private void placeName(Location_Model loc){ //legacy
-//        JLabel label = new JLabel(loc.getLocation_name());
-//        int textbuffer = 25;
-//        label.setSize(new Dimension(
-//                (int) label.getPreferredSize().getWidth() + textbuffer ,
-//                (int) label.getPreferredSize().getHeight() + textbuffer));
-//        label.setLocation(new Point(
-//                (int)(loc.getDrawingloc().getX() + loc.getPoint().getX()),
-//                (int)(loc.getDrawingloc().getY() + loc.getPoint().getY())));
-//        Font labelFont = label.getFont();
-//        String labelText = label.getText();
-//
-//        int stringWidth = label.getFontMetrics(labelFont).stringWidth(labelText);
-//        int componentWidth = label.getWidth();
-//
-//        // Find out how much the font can grow in width.
-//        double widthRatio = (double)componentWidth / (double)stringWidth;
-//
-//        int newFontSize = (int)(labelFont.getSize() * widthRatio);
-//        int componentHeight = label.getHeight();
-//
-//        // Pick a new font size so it will not be larger than the height of label.
-//        int fontSizeToUse = Math.min(newFontSize, componentHeight);
-//
-//        // Set the label's font size to the newly determined size.
-//        label.setFont(new Font(labelFont.getName(), Font.BOLD, fontSizeToUse));
-//        label.setForeground(Color.RED);
-//        panel.add(label);
-//        label.setVisible(true);
-//        label.setOpaque(false);
-//    }
-//
-//    private void placeObjectName(Object_Model obj){ //legacy
-//        saveObjectTextImage(new  ImagePanel(TexttoImage(obj.getName(),obj.getObjectloc()),panel.getScale()));
-//    }
-//    private void placeObjectName(Point location){ //legacy
-//        // this long call is getting the name of the object.
-//        JLabel label = new JLabel((lst.getRlist().getElementAt(lst.getRlist().getSize() - 1).getObjects()
-//        .get(lst.getRlist().getElementAt(lst.getRlist().getSize() - 1).getObjects().size() -1)).getName());
-//        int textbuffer = 25;
-//        label.setSize(new Dimension(
-//                (int) label.getPreferredSize().getWidth() + textbuffer ,
-//                (int) label.getPreferredSize().getHeight() + textbuffer));
-//        label.setLocation(location);
-//        Font labelFont = label.getFont();
-//        String labelText = label.getText();
-//
-//        int stringWidth = label.getFontMetrics(labelFont).stringWidth(labelText);
-//        int componentWidth = label.getWidth();
-//
-//        // Find out how much the font can grow in width.
-//        double widthRatio = (double)componentWidth / (double)stringWidth;
-//
-//        int newFontSize = (int)(labelFont.getSize() * widthRatio);
-//        int componentHeight = label.getHeight();
-//
-//        // Pick a new font size so it will not be larger than the height of label.
-//        int fontSizeToUse = Math.min(newFontSize, componentHeight);
-//
-//        // Set the label's font size to the newly determined size.
-//        label.setFont(new Font(labelFont.getName(), Font.BOLD, fontSizeToUse));
-//        label.setForeground(Color.GREEN);
-//        panel.add(label);
-//        label.setVisible(true);
-//        label.setOpaque(false);
-//    }
 }
-// TODO: 6/2/2019 fix up the button panel, allow deletion of objects/seeing objects/seeing details about the lists.
