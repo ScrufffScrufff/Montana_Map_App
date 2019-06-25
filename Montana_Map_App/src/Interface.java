@@ -585,7 +585,7 @@ public class Interface extends JFrame {
         myPanel.add(new JLabel("Elevation of area:"));
         myPanel.add(elevation);
         myPanel.add(new JLabel("Type of object:"));
-        myPanel.add(object_type);//finish here
+        myPanel.add(object_type);
 
         int result = JOptionPane.showConfirmDialog(null, myPanel,
                 "Please Enter Object name, Year found/current year, Elevation of the area, and optional object type", JOptionPane.OK_CANCEL_OPTION);
@@ -740,7 +740,7 @@ public class Interface extends JFrame {
         return p;
     }
 
-//
+
 
     private void saveImage(JPanel imagepanel){
         try {
@@ -831,7 +831,6 @@ public class Interface extends JFrame {
         Image tmpImage = objectIcon.getImage();
         BufferedImage object = new BufferedImage(objectIcon.getIconWidth(), objectIcon.getIconHeight(), BufferedImage.TYPE_INT_ARGB);
         object.getGraphics().drawImage(tmpImage, 0, 0, null);
-        //add the object to the location/object_model
         objectnumber++;
         tmpImage.flush();
 
@@ -839,7 +838,7 @@ public class Interface extends JFrame {
         int index = lst.getJFirstList().getSelectedIndex();
         ArrayList<Object_Model> objects = lst.getLocationList().getElementAt(index).getObjects();
         objects.get(objects.size() - 1).setFilePath(filename);
-        objects.get(objects.size() - 1).setObjectpanel(objectPanel); //objectpanel is getspot
+        objects.get(objects.size() - 1).setObjectpanel(objectPanel);
         objectPanelList.add(objectPanel);
         panel.add(objectPanel);
         objectPanel.setBounds(
@@ -865,7 +864,7 @@ public class Interface extends JFrame {
                 panel.getHeight());
         objectPanel.setVisible(true);
     }
-    private void placeTextObject(){ //place these when the object gets placed/loaded.
+    private void placeTextObject(){
         String filename = "ObjectText" + objecttextnumber + ".png";
         ImageIcon objecttextIcon = new ImageIcon(filename);
         Image tmpImage = objecttextIcon.getImage();
@@ -906,7 +905,7 @@ public class Interface extends JFrame {
         objecttextPanel.setVisible(true);
     }
 
-    private void placeTextLocation(){ //place these when the location gets drawn/placed/loaded
+    private void placeTextLocation(){
         int index = lst.getLocationList().getSize() - 1;
         String filename = "LocationText" + locationtextnumber + ".png";
         ImageIcon locationtextIcon = new ImageIcon(filename);
@@ -937,7 +936,7 @@ public class Interface extends JFrame {
         tmpImage.flush();
 
         ImagePanel locationtextPanel = new ImagePanel(locationimg, panel.getScale());
-        locationTextPanelList.add(locationtextPanel); //might not need this?
+        locationTextPanelList.add(locationtextPanel);
         panel.add(locationtextPanel);
         locationtextPanel.setBounds(
                 0,0,
@@ -1031,18 +1030,15 @@ public class Interface extends JFrame {
         g2d.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
         g2d.setFont(font);
 
-        // create a glyph vector from your text
         GlyphVector glyphVector = getFont().createGlyphVector(g2d.getFontRenderContext(), text);
-        // get the shape object
         Shape textShape = glyphVector.getOutline((float)location.getX(),(float)location.getY());
-
 
         g2d.setColor(outlineColor);
         g2d.setStroke(outlineStroke);
         g2d.draw(textShape); // draw outline
 
         g2d.setColor(fillColor);
-        g2d.fill(textShape);
+        g2d.fill(textShape); //fill for black bordered white text
         g2d.dispose();
         return img;
     }
