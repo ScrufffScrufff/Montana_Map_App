@@ -9,9 +9,8 @@ public class LocationModel implements Serializable {
     public static final long serialVersionUID = 1L;
     String filepath, locationtextfilepath;
     String locationname;
-    String yr;
     ArrayList<Object_Model> objects = new ArrayList();
-    int elevation,filenumber, locationnumber;
+    int elevation,filenumber, locationnumber, yr;
     Point point,drawingloc;
 
 
@@ -19,7 +18,7 @@ public class LocationModel implements Serializable {
 
     }
 
-    public LocationModel(String name_location, String year, int elevation){
+    public LocationModel(String name_location, int year, int elevation){
         this.locationname = name_location;
         this.yr = year;
         this.elevation = elevation;
@@ -42,7 +41,7 @@ public class LocationModel implements Serializable {
     private void readObject(ObjectInputStream in) throws IOException,ClassNotFoundException {
         in.defaultReadObject();
         this.locationname = (String) in.readObject();
-        this.yr = (String) in.readObject();
+        this.yr = (int) in.readObject();
         this.objects = (ArrayList<Object_Model>) in.readObject();
         this.elevation = (int) in.readObject();
         this.filepath = (String) in.readObject();
@@ -65,9 +64,11 @@ public class LocationModel implements Serializable {
         return elevation;
     }
 
-    public String getYear() {
+    public int getYear() {
         return yr;
     }
+
+    public void setYear(int year){this.yr = year;}
 
     public String getFilepath() {
         return filepath;

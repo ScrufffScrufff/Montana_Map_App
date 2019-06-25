@@ -3,6 +3,7 @@ import javax.swing.*;
 import javax.swing.event.ChangeListener;
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.font.GlyphVector;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Path2D;
 import java.awt.geom.PathIterator;
@@ -14,13 +15,14 @@ import java.util.List;
 
 public class Interface extends JFrame {
     private int  fileNumber = 0, objectnumber = 0, objecttextnumber = 0, locationtextnumber;
+    private final int vGap = 5, hGap = 5;
     private JList_Struct lst;
     private JScrollPane scrollPane;
-    private JPanel objectpanel, glasspane;
+    private JPanel objectpanel, glasspane, buttonPanel;
     private Point pointStart = null;
     private Point pointEnd = null;
     private Point trueStart = null;
-    private boolean lineDrawn = false;
+    private boolean drawingplaced = false, lineDrawn = false;
     private ImagePanel panel;
     private ImageZoom zoom;
     private List<ImagePanel> imagePanelList = new ArrayList<>();
@@ -42,6 +44,16 @@ public class Interface extends JFrame {
                 if(!lst.getLocationList().isEmpty()) {
                     //save the contents of lst for future use
                     File f = new File("mapdata.ser");
+                    for (int i = 0; i < lst.getLocationList().size(); i++){
+                        if (lst.getLocationList().get(i).getFilepath() == null){
+                            lst.getLocationList().remove(i);
+                        }
+                        for (int j = 0; j < lst.getLocationList().get(i).getObjects().size(); j++){
+                            if (lst.getLocationList().get(i).getObjects().get(j).getFile_path() == null){
+                                lst.getLocationList().get(i).getObjects().remove(j);
+                            }
+                        }
+                    }
                     try {
                         // write object to file
                         ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(f));
@@ -69,6 +81,18 @@ public class Interface extends JFrame {
     public void run() {
         File savefile = new File("mapdata.ser");
         panel = new ImagePanel( "examplemap.jpg");
+        try {
+            UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
+
+        } catch (ClassNotFoundException e){
+            e.printStackTrace();
+        } catch (InstantiationException e){
+            e.printStackTrace();
+        } catch (IllegalAccessException e){
+            e.printStackTrace();
+        } catch (UnsupportedLookAndFeelException e){
+            e.printStackTrace();
+        }
         panel.setLayout(null);
         scrollPane = new JScrollPane(panel);
         zoom = new ImageZoom(panel, this);
@@ -95,8 +119,8 @@ public class Interface extends JFrame {
         JPanel bufferPanel0 = new JPanel();
 
         bufferPanel0.setLayout(new BorderLayout());
-        buttonPanelholder.setLayout(new GridLayout(2,2));
-        JPanel buttonPanel = new JPanel();
+        buttonPanelholder.setLayout(new GridLayout(2,1));
+        buttonPanel = new JPanel();
         GridLayout layout = new GridLayout(4,2);
         buttonPanel.setLayout(layout);
         JLayeredPane lp = getLayeredPane();
@@ -116,14 +140,11 @@ public class Interface extends JFrame {
         buttonPanel.add(remove_object_entry_button);
         buttonPanel.add(zoom.getUIPanel());
 
-
         bufferPanel0.add(lst.getNestedList());
+        buttonPanelholder.setBorder(BorderFactory.createEmptyBorder(hGap, vGap, hGap, vGap));
+        buttonPanel.setBorder(BorderFactory.createEmptyBorder(hGap, vGap, hGap, vGap));
         this.add(BorderLayout.WEST,buttonPanelholder);
 
-        remove_object_entry_button.setPreferredSize(new Dimension(remove_location_entry_button.getPreferredSize().width, 50));
-        remove_location_entry_button.setPreferredSize(new Dimension(remove_location_entry_button.getPreferredSize().width, 50));
-        add_entry_button.setPreferredSize(new Dimension(add_entry_button.getPreferredSize().width, 50));
-        add_object_button.setPreferredSize(new Dimension(add_entry_button.getPreferredSize().width, 50));
 
         pack();
 
@@ -160,6 +181,7 @@ public class Interface extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 if (panel.getScale() == 1) {
                     if (addEntry(getInputFromUser())) {
+                        buttonPanel.setVisible(false);
                         glasspane.setSize(scrollPane.getSize().width - 18, scrollPane.getSize().height - 18);
                         // -18 for the size of the scrollbars at the bottom of the panel/ side of panel.
                         lineDrawn = false;
@@ -191,6 +213,7 @@ public class Interface extends JFrame {
                 if(!(lst.getNestedList().getJfirstList().getSelectedValue() == null)) {
                     if (panel.getScale() == 1) {
                         if (addObjectEntry(getObjectInputFromUser())) {
+                            buttonPanel.setVisible(false);
                             object_pane.setSize(scrollPane.getSize().width - 18, scrollPane.getSize().height - 18);
                             lineDrawn = false;
                             objectpanel.setEnabled(true);
@@ -223,9 +246,67 @@ public class Interface extends JFrame {
                 int index = lst.getJFirstList().getSelectedIndex();
                 super.mouseClicked(e);
                 if (e.getClickCount() == 2) {
-                    scrollPane.getViewport().setViewPosition(lst.getLocationList().get(index).getLocationviewpoint()); //center it, currently off because topleft corner
+                    scrollPane.getViewport().setViewPosition(lst.getLocationList().get(index).getLocationviewpoint());
                 } else if (e.getClickCount() == 3) {
-                    // TODO: 6/17/2019 display the related fields to the user
+                    JButton update_year = new JButton("Update Year");
+                    JButton update_elevation = new JButton("Update Elevation");
+                    JFrame updateframe = new JFrame();
+                    JPanel myPanel = new JPanel();
+                    JLabel elevationlable = new JLabel("Elevation is: " + lst.getLocationList().get(index).getElevation());
+                    JLabel yearlabel = new JLabel("Year is: " + lst.getLocationList().get(index).getYear());
+                    myPanel.add(elevationlable);
+                    myPanel.add(update_elevation);
+                    myPanel.add(Box.createHorizontalStrut(15)); // a spacer
+                    myPanel.add(yearlabel);
+                    myPanel.add(update_year);
+
+                    update_elevation.addActionListener(new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            JTextField elevationfield = new JTextField(5);
+                            myPanel.remove(update_elevation);
+                            myPanel.remove(elevationlable);
+                            myPanel.remove(update_year);
+                            myPanel.remove(yearlabel);
+                            myPanel.add(elevationlable);
+                            myPanel.add(elevationfield);
+                            myPanel.add(yearlabel);
+                            int result = JOptionPane.showConfirmDialog(null, myPanel, "Please update elevation", JOptionPane.OK_CANCEL_OPTION);
+                            if(result == JOptionPane.OK_OPTION && !elevationfield.getText().isEmpty() && elevationfield.getText().matches("-?\\d+(\\.\\d+)?")){
+                                lst.getLocationList().get(index).setElevation(Integer.parseInt(elevationfield.getText()));
+                            } else {
+                                JOptionPane.showMessageDialog(panel, "Please enter a valid elevation");
+                            }
+                            updateframe.setVisible(false);
+                        }
+                    });
+
+                    update_year.addActionListener(new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            JTextField yearfield = new JTextField(5);
+                            myPanel.remove(update_elevation);
+                            myPanel.remove(elevationlable);
+                            myPanel.remove(update_year);
+                            myPanel.remove(yearlabel);
+                            myPanel.add(elevationlable);
+                            myPanel.add(yearlabel);
+                            myPanel.add(yearfield);
+                            int result = JOptionPane.showConfirmDialog(null, myPanel, "Please update elevation", JOptionPane.OK_CANCEL_OPTION);
+                            if(result == JOptionPane.OK_OPTION && !yearfield.getText().isEmpty()&& yearfield.getText().matches("-?\\d+?")){
+                                lst.getLocationList().get(index).setYear(Integer.parseInt(yearfield.getText()));
+                            } else {
+                                JOptionPane.showMessageDialog(panel, "Please enter a valid Year");
+
+                            }
+                            updateframe.setVisible(false);
+                        }
+                    });
+                    myPanel.setVisible(true);
+                    updateframe.add(myPanel);
+                    updateframe.setSize(600,100);
+                    updateframe.setVisible(true);
+
                 }
             }
         });
@@ -233,8 +314,113 @@ public class Interface extends JFrame {
         lst.getJSecondList().addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
+                int index = lst.getJSecondList().getSelectedIndex();
                 super.mouseClicked(e);
-                // TODO: 6/17/2019 display related fields to the user
+                if (e.getClickCount() == 3) {
+                    JButton update_year = new JButton("Update Year");
+                    JButton update_elevation = new JButton("Update Elevation");
+                    JButton update_type = new JButton("Update type of object");
+                    JFrame updateframe = new JFrame();
+                    JPanel myPanel = new JPanel();
+                    JLabel elevationlable = new JLabel("Elevation is: " + lst.getLocationList().get(lst.getJFirstList().getSelectedIndex()).getObjects().get(index).getElevation());
+                    JLabel yearlabel = new JLabel("Year is: " + lst.getLocationList().get(lst.getJFirstList().getSelectedIndex()).getObjects().get(index).getYear());
+                    JLabel typelabel = new JLabel("Object type is: " + lst.getLocationList().get(lst.getJFirstList().getSelectedIndex()).getObjects().get(index).getType());
+                    JLabel elevationlableminus = new JLabel("Elevation is: " );
+                    JLabel yearlabelminus = new JLabel("Year is: " );
+                    JLabel typelabelminus = new JLabel("Object type is: " );
+
+                    myPanel.add(elevationlable);
+                    myPanel.add(update_elevation);
+                    myPanel.add(Box.createHorizontalStrut(15)); // a spacer
+                    myPanel.add(yearlabel);
+                    myPanel.add(update_year);
+                    myPanel.add(Box.createHorizontalStrut(15)); // a spacer
+                    myPanel.add(typelabel);
+                    myPanel.add(update_type);
+
+
+                    update_elevation.addActionListener(new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            JTextField elevationfield = new JTextField(5);
+                            myPanel.remove(update_elevation);
+                            myPanel.remove(elevationlable);
+                            myPanel.remove(update_year);
+                            myPanel.remove(yearlabel);
+                            myPanel.remove(update_type);
+                            myPanel.remove(typelabel);
+
+                            myPanel.add(elevationlableminus);
+                            myPanel.add(elevationfield);
+                            myPanel.add(yearlabel);
+                            myPanel.add(typelabel);
+                            int result = JOptionPane.showConfirmDialog(null, myPanel, "Please update elevation", JOptionPane.OK_CANCEL_OPTION);
+                            if(result == JOptionPane.OK_OPTION && !elevationfield.getText().isEmpty() && elevationfield.getText().matches("-?\\d+(\\.\\d+)?")){
+                                lst.getLocationList().get(lst.getJFirstList().getSelectedIndex()).getObjects().get(index).setElevation(Integer.parseInt(elevationfield.getText()));
+                            } else {
+                                JOptionPane.showMessageDialog(panel, "Please enter a valid elevation");
+                            }
+                            updateframe.setVisible(false);
+                        }
+                    });
+
+                    update_year.addActionListener(new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            JTextField yearfield = new JTextField(5);
+                            myPanel.remove(update_elevation);
+                            myPanel.remove(elevationlable);
+                            myPanel.remove(update_year);
+                            myPanel.remove(yearlabel);
+                            myPanel.remove(update_type);
+                            myPanel.remove(typelabel);
+
+                            myPanel.add(elevationlable);
+                            myPanel.add(yearlabelminus);
+                            myPanel.add(yearfield);
+                            myPanel.add(typelabel);
+                            int result = JOptionPane.showConfirmDialog(null, myPanel, "Please update year", JOptionPane.OK_CANCEL_OPTION);
+                            if(result == JOptionPane.OK_OPTION && !yearfield.getText().isEmpty()&& yearfield.getText().matches("-?\\d+?")){
+                                lst.getLocationList().get(lst.getJFirstList().getSelectedIndex()).getObjects().get(index).setYear(Integer.parseInt(yearfield.getText()));
+                            } else {
+                                JOptionPane.showMessageDialog(panel, "Please enter a valid Year");
+
+                            }
+                            updateframe.setVisible(false);
+                        }
+                    });
+
+                    update_type.addActionListener(new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            JTextField typefield = new JTextField(5);
+                            myPanel.remove(update_elevation);
+                            myPanel.remove(elevationlable);
+                            myPanel.remove(update_year);
+                            myPanel.remove(yearlabel);
+                            myPanel.remove(update_type);
+                            myPanel.remove(typelabel);
+
+                            myPanel.add(elevationlable);
+                            myPanel.add(yearlabel);
+                            myPanel.add(typelabelminus);
+                            myPanel.add(typefield);
+                            int result = JOptionPane.showConfirmDialog(null, myPanel, "Please update object type", JOptionPane.OK_CANCEL_OPTION);
+                            if(result == JOptionPane.OK_OPTION && !typefield.getText().isEmpty()&& typefield.getText().matches("([A-Z]|[a-z]| |-)*")){
+                                lst.getLocationList().get(lst.getJFirstList().getSelectedIndex()).getObjects().get(index).setType(typefield.getText());
+                            } else {
+                                JOptionPane.showMessageDialog(panel, "Please enter a valid Object Type ");
+
+                            }
+                            updateframe.setVisible(false);
+                        }
+                    });
+                    myPanel.setVisible(true);
+                    updateframe.add(myPanel);
+                    updateframe.setSize(800,100);
+                    updateframe.setVisible(true);
+
+                }
             }
         });
 
@@ -244,7 +430,6 @@ public class Interface extends JFrame {
         for (int i = 0; i < lst.getLocationList().size(); i++){
             placeImage(lst.getLocationList().getElementAt(i).getFilepath());
             placeTextLocation(lst.getLocationList().getElementAt(i).getLocationtextfilepath());
-
 
             for(int j = 0; j < (lst.getLocationList().getElementAt(i).getObjects()).size(); j++){
                 placeTextObject(lst.getLocationList().getElementAt(i).getObjects().get(j).gettextFile_path());
@@ -269,7 +454,7 @@ public class Interface extends JFrame {
 
 
     public boolean addEntry(LocationModel loc) {
-        if (loc.getLocationname() != null && loc.getElevation() != 0 && loc.getYear() != null ) {
+        if (loc.getLocationname() != null && loc.getElevation() != 0 && loc.getYear() != 0 ) {
             lst.getLocationList().addElement(loc);
             lst.getNestedList().addItem(loc.getLocationname());
             return true;
@@ -359,13 +544,13 @@ public class Interface extends JFrame {
 
         int result = JOptionPane.showConfirmDialog(null, myPanel,
                 "Please Enter Location name, Year found/current year, Elevation of the area", JOptionPane.OK_CANCEL_OPTION);
-        if (result == JOptionPane.OK_OPTION && !loc_name.getText().isEmpty()  && !year.getText().isEmpty() && !elevation.getText().isEmpty()) {
+        if (result == JOptionPane.OK_OPTION && loc_name.getText().matches("([A-Z]|[a-z]| -)*")  && year.getText().matches("-?\\d+(\\.\\d+)?") && elevation.getText().matches("-?\\d+(\\.\\d+)?")) {
             try{
                 Integer.parseInt(elevation.getText());
             }catch (NumberFormatException e) {
                 return new LocationModel();
             }
-            LocationModel location = new LocationModel(loc_name.getText(),year.getText()
+            LocationModel location = new LocationModel(loc_name.getText(),Integer.parseInt(year.getText())
                     ,Integer.parseInt(elevation.getText()));
             return location;
         } else {
@@ -395,14 +580,14 @@ public class Interface extends JFrame {
 
         int result = JOptionPane.showConfirmDialog(null, myPanel,
                 "Please Enter Object name, Year found/current year, Elevation of the area, and optional object type", JOptionPane.OK_CANCEL_OPTION);
-        if (result == JOptionPane.OK_OPTION && !obj_name.getText().isEmpty() && !year.getText().isEmpty() && !elevation.getText().isEmpty()) {
+        if (result == JOptionPane.OK_OPTION && obj_name.getText().matches("([A-Z]|[a-z]| |-)*") && year.getText().matches("-?\\d+(\\.\\d+)?") && elevation.getText().matches("-?\\d+(\\.\\d+)?")) {
                 try {
                     Integer.parseInt(elevation.getText());
                     Integer.parseInt(year.getText());
                 } catch (NumberFormatException e) {
                     return new Object_Model();
                 }
-                if (object_type.getText() != null) { //has a type
+                if (object_type.getText().matches("([A-Z]|[a-z]| |-)*")) { //has a type
                     Object_Model object = new Object_Model(obj_name.getText(), Integer.parseInt(year.getText())
                              , Integer.parseInt(elevation.getText()), object_type.getText());
                     return object;
@@ -460,6 +645,7 @@ public class Interface extends JFrame {
                     currentshape.reset();
                     glasspane.setEnabled(false);
                     glasspane.setVisible(false);
+                    buttonPanel.setVisible(true);
                     return;
                 }
             }
@@ -531,6 +717,7 @@ public class Interface extends JFrame {
                     currentshape.reset();
                     objectpanel.setEnabled(false);
                     objectpanel.setVisible(false);
+                    buttonPanel.setVisible(true);
                     pointStart = null;
                     return;
                 }
@@ -812,6 +999,9 @@ public class Interface extends JFrame {
         return mappanel;
     }
     public BufferedImage texttoImage(String text, Point location) {
+        Color outlineColor = Color.black;
+        Color fillColor = Color.white;
+        BasicStroke outlineStroke = new BasicStroke(5.0f);
         BufferedImage img = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g2d = img.createGraphics();
         Font font = new Font("Arial", Font.HANGING_BASELINE, 20);
@@ -831,8 +1021,19 @@ public class Interface extends JFrame {
         g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
         g2d.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
         g2d.setFont(font);
-        g2d.setColor(Color.RED); // TODO: 6/17/2019 change to a color that isn't hideous
-        g2d.drawString(text, (int)location.getX(), (int)location.getY());
+
+        // create a glyph vector from your text
+        GlyphVector glyphVector = getFont().createGlyphVector(g2d.getFontRenderContext(), text);
+        // get the shape object
+        Shape textShape = glyphVector.getOutline((float)location.getX(),(float)location.getY());
+
+
+        g2d.setColor(outlineColor);
+        g2d.setStroke(outlineStroke);
+        g2d.draw(textShape); // draw outline
+
+        g2d.setColor(fillColor);
+        g2d.fill(textShape);
         g2d.dispose();
         return img;
     }

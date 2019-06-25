@@ -6,8 +6,7 @@ import java.io.Serializable;
 
 public class Object_Model implements Serializable {
     private String name, type, filename, textfilepath;
-    private int year,objectnumber,objecttextnumber;
-    private int elevation;
+    private int year,objectnumber,objecttextnumber, elevation;
     private ImagePanel objectpanel, objecttextpanel;
     private Point objectloc;
 

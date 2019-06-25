@@ -136,7 +136,7 @@ class ImageZoom
 
     public JPanel getUIPanel()
     {
-        spinner.setPreferredSize(new Dimension(45, spinner.getPreferredSize().height));
+        spinner.setPreferredSize(new Dimension(55, spinner.getPreferredSize().height));
         spinnerlistener = new ChangeListener()
         {
             public void stateChanged(ChangeEvent e) {

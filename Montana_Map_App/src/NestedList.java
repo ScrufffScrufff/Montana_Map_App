@@ -1,4 +1,4 @@
-import java.awt.GridLayout;
+import java.awt.*;
 import java.util.ArrayList;
 
 import javax.swing.*;
@@ -16,6 +16,10 @@ public class NestedList extends JPanel implements ListSelectionListener {
 
     public NestedList(){
             super(new GridLayout(0, 2));
+
+            this.setBorder(BorderFactory.createLoweredSoftBevelBorder());
+            jlocationlist.setBackground(new java.awt.Color(120, 123, 170 ));
+            jobjectlist.setBackground(new java.awt.Color(120, 123, 170 ));
             add(jlocationlist);
             add(jobjectlist);
             jlocationlist.addListSelectionListener(this);
