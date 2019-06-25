@@ -1,5 +1,6 @@
 import javax.imageio.ImageIO;
 import javax.swing.*;
+import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeListener;
 import java.awt.*;
 import java.awt.event.*;
@@ -22,7 +23,7 @@ public class Interface extends JFrame {
     private Point pointStart = null;
     private Point pointEnd = null;
     private Point trueStart = null;
-    private boolean drawingplaced = false, lineDrawn = false;
+    private boolean lineDrawn = false;
     private ImagePanel panel;
     private ImageZoom zoom;
     private List<ImagePanel> imagePanelList = new ArrayList<>();
@@ -248,6 +249,9 @@ public class Interface extends JFrame {
                 if (e.getClickCount() == 2) {
                     scrollPane.getViewport().setViewPosition(lst.getLocationList().get(index).getLocationviewpoint());
                 } else if (e.getClickCount() == 3) {
+                    TitledBorder border = new TitledBorder(lst.getLocationList().get(index).getLocationname());
+                    border.setTitleJustification(TitledBorder.CENTER);
+                    border.setTitlePosition(TitledBorder.TOP);
                     JButton update_year = new JButton("Update Year");
                     JButton update_elevation = new JButton("Update Elevation");
                     JFrame updateframe = new JFrame();
@@ -259,6 +263,7 @@ public class Interface extends JFrame {
                     myPanel.add(Box.createHorizontalStrut(15)); // a spacer
                     myPanel.add(yearlabel);
                     myPanel.add(update_year);
+                    myPanel.setBorder(border);
 
                     update_elevation.addActionListener(new ActionListener() {
                         @Override
@@ -317,6 +322,9 @@ public class Interface extends JFrame {
                 int index = lst.getJSecondList().getSelectedIndex();
                 super.mouseClicked(e);
                 if (e.getClickCount() == 3) {
+                    TitledBorder border = new TitledBorder(lst.getLocationList().get(index).getLocationname());
+                    border.setTitleJustification(TitledBorder.CENTER);
+                    border.setTitlePosition(TitledBorder.TOP);
                     JButton update_year = new JButton("Update Year");
                     JButton update_elevation = new JButton("Update Elevation");
                     JButton update_type = new JButton("Update type of object");
@@ -337,6 +345,7 @@ public class Interface extends JFrame {
                     myPanel.add(Box.createHorizontalStrut(15)); // a spacer
                     myPanel.add(typelabel);
                     myPanel.add(update_type);
+                    myPanel.setBorder(border);
 
 
                     update_elevation.addActionListener(new ActionListener() {
