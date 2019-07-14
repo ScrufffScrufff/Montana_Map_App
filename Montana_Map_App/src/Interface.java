@@ -73,9 +73,12 @@ public class Interface extends JFrame {
 
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setTitle("Montana Map");
-        this.setExtendedState(JFrame.MAXIMIZED_BOTH);
         run();
+        this.setLayout(new BorderLayout());
+        pack();
+        this.setExtendedState(JFrame.MAXIMIZED_BOTH);
         setVisible(true);
+
     }
 
 
@@ -158,8 +161,6 @@ public class Interface extends JFrame {
         glasspane.setLocation(scrollPane.getLocation());
         lp.add(glasspane);
 
-
-        lp.addComponentListener(new JLayeredPaneListener(scrollPane));
 
         remove_location_entry_button.addActionListener(new ActionListener() {
 
@@ -708,9 +709,11 @@ public class Interface extends JFrame {
                     saveObjectImage(captureImage(currentshape));
                     placeObject();
 
-                    lst.getLocationList().getElementAt(lst.getLocationList().getSize() - 1)
+
+                    // !!!!!!!!!!!! THIS ONLY WORKS IF THEY ALWAYS CHOOSE THE LAST ITEM IN THE ARRAY, DOES NOT WORK IF THEY GO LOC1, LOC2, LOC1->OBJ. BREAKS !!!!!!!!!!!!!!!!!!!!!!
+                    lst.getLocationList().getElementAt(lst.getJFirstList().getSelectedIndex())
                             .getObjects()
-                            .get(lst.getLocationList().getElementAt(lst.getLocationList().getSize() -1).getObjects().size()-1)
+                            .get(lst.getLocationList().getElementAt(lst.getJFirstList().getSelectedIndex()).getObjects().size()-1)
                             .setObjectloc(new Point(
                                     (int)pointStart.getX() + (int)scrollPane.getViewport().getViewPosition().getX(),
                                     (int)pointStart.getY() + (int)scrollPane.getViewport().getViewPosition().getY()));
@@ -1043,3 +1046,6 @@ public class Interface extends JFrame {
         return img;
     }
 }
+// TODO: 7/13/2019 lettering layering top layer
+// TODO: 7/13/2019 swap between two images (sat/topographic) 
+// TODO: 7/13/2019 stitching map fragments together so they are both the same maps
