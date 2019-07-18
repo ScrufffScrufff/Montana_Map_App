@@ -12,7 +12,7 @@ import javax.swing.event.*;
 class ImagePanel extends JPanel {
     private BufferedImage image;
     private double scale;
-    private boolean ismap; //to tell the paintcomponent what comp it is painting
+    private boolean ismap;
 
     public ImagePanel(String s)
     {
@@ -39,23 +39,19 @@ class ImagePanel extends JPanel {
         int h = getHeight();
         int imageWidth = image.getWidth();
         int imageHeight = image.getHeight();
-
-
-        if(ismap){
-            x = (w - (scale * imageWidth))/2;
-            y = (h - (scale * imageHeight))/2;
-        }else {
-            int wi = (int)(image.getWidth() * scale);
-            int he = (int)(image.getHeight() * scale);
-
-            x = (wi - (scale * imageWidth))/2;
-            y = (he - (scale * imageHeight))/2;
+        if (ismap) {
+            x = (w - (scale * imageWidth)) / 2;
+            y = (h - (scale * imageHeight)) / 2;
+        } else {
+            int wi = (int) (image.getWidth() * scale);
+            int he = (int) (image.getHeight() * scale);
+            x = (wi - (scale * imageWidth)) / 2;
+            y = (he - (scale * imageHeight)) / 2;
         }
         AffineTransform at = AffineTransform.getTranslateInstance(x,y);
         at.scale(scale, scale);
         g2.drawRenderedImage(image, at);
-
-    }
+}
 
     /**
      * For the scroll pane.
@@ -65,8 +61,6 @@ class ImagePanel extends JPanel {
             int h = (int) (scale * image.getHeight());
             return new Dimension(w, h);
     }
-
-
 
     public void changeScale(double s){
         scale += s;

@@ -438,12 +438,12 @@ public class Interface extends JFrame {
 
         //for every location and object place all of the images and get the max numbers for each
         for (int i = 0; i < lst.getLocationList().size(); i++){
-            placeImage(lst.getLocationList().getElementAt(i).getFilepath());
             placeTextLocation(lst.getLocationList().getElementAt(i).getLocationtextfilepath());
+            placeImage(lst.getLocationList().getElementAt(i).getFilepath());
 
             for(int j = 0; j < (lst.getLocationList().getElementAt(i).getObjects()).size(); j++){
-                placeTextObject(lst.getLocationList().getElementAt(i).getObjects().get(j).gettextFile_path());
                 placeObject(lst.getLocationList().getElementAt(i).getObjects().get(j).getFile_path());
+                placeTextObject(lst.getLocationList().getElementAt(i).getObjects().get(j).gettextFile_path());
                 objectnumber = (lst.getLocationList().getElementAt(i).getObjects().get(j).getObjectnumber() > objectnumber) ?
                         lst.getLocationList().getElementAt(i).getObjects().get(j).getObjectnumber() + 1 : objectnumber + 1;
 
@@ -458,6 +458,7 @@ public class Interface extends JFrame {
                     lst.getLocationList().getElementAt(i).getLocationnumber() + 1 : locationtextnumber + 1;
         }
     } // run()
+
 
 
 
@@ -646,9 +647,8 @@ public class Interface extends JFrame {
                     saveTextImage(texttoImage(lst.getLocationList().getElementAt(lst.getLocationList().getSize() - 1).getLocationname(),new Point(
                             (int)trueStart.getX() + (int)scrollPane.getViewport().getViewPosition().getX(),
                             (int)trueStart.getY() + (int)scrollPane.getViewport().getViewPosition().getY())));
-
-                    placeImage();
                     placeTextLocation();
+                    placeImage();
                     lst.getLocationList().getElementAt(lst.getLocationList().getSize() - 1).setLocationviewpoint(scrollPane.getViewport().getViewPosition());
                     lst.getLocationList().getElementAt(lst.getLocationList().getSize() - 1).setDrawingloc(trueStart);
                     shapeList.remove(currentshape);
@@ -707,10 +707,7 @@ public class Interface extends JFrame {
                     lineDrawn = true;
                     //save the current shape then place it on panel.
                     saveObjectImage(captureImage(currentshape));
-                    placeObject();
 
-
-                    // !!!!!!!!!!!! THIS ONLY WORKS IF THEY ALWAYS CHOOSE THE LAST ITEM IN THE ARRAY, DOES NOT WORK IF THEY GO LOC1, LOC2, LOC1->OBJ. BREAKS !!!!!!!!!!!!!!!!!!!!!!
                     lst.getLocationList().getElementAt(lst.getJFirstList().getSelectedIndex())
                             .getObjects()
                             .get(lst.getLocationList().getElementAt(lst.getJFirstList().getSelectedIndex()).getObjects().size()-1)
@@ -724,7 +721,7 @@ public class Interface extends JFrame {
                     //save the current text then places it on panel.
                     saveObjectTextImage(textimg);
                     placeTextObject();
-
+                    placeObject();
                     shapeList.remove(currentshape);
                     currentshape.reset();
                     objectpanel.setEnabled(false);
@@ -1046,6 +1043,3 @@ public class Interface extends JFrame {
         return img;
     }
 }
-// TODO: 7/13/2019 lettering layering top layer
-// TODO: 7/13/2019 swap between two images (sat/topographic) 
-// TODO: 7/13/2019 stitching map fragments together so they are both the same maps
